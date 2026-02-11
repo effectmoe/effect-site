@@ -2,6 +2,8 @@ import { Link } from "react-router";
 import type { Route } from "./+types/articles._index";
 import { getArticles } from "~/lib/notion.server";
 import { cached } from "~/lib/cache.server";
+import { JsonLd } from "~/components/json-ld";
+import { generateArticleListJsonLd } from "~/lib/jsonld";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
@@ -34,8 +36,10 @@ export default function ArticleList({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <div>
-      <h1 className="mb-8 text-2xl font-bold">Articles</h1>
+    <>
+      <JsonLd data={generateArticleListJsonLd(articles)} />
+      <div>
+        <h1 className="mb-8 text-2xl font-bold">Articles</h1>
       <div className="space-y-6">
         {articles.map((article) => (
           <article
@@ -71,5 +75,6 @@ export default function ArticleList({ loaderData }: Route.ComponentProps) {
         ))}
       </div>
     </div>
+    </>
   );
 }

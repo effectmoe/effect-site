@@ -6,4 +6,7 @@ export default [
   route("articles/:slug", "routes/articles.$slug.tsx"),
   route("about", "routes/about.tsx"),
   route("api/crawler-stats", "routes/api.crawler-stats.ts"),
+  route("llms.txt", "routes/llms[.]txt.ts"),
+  route("robots.txt", "routes/robots[.]txt.ts"),
+  route("sitemap.xml", "routes/sitemap[.]xml.ts"),
 ] satisfies RouteConfig;

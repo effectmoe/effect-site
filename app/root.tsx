@@ -13,6 +13,8 @@ import "./app.css";
 import { Header } from "./components/header";
 import { Footer } from "./components/footer";
 import { aiCrawlerMiddleware } from "~/lib/middleware.server";
+import { JsonLd } from "~/components/json-ld";
+import { generateSiteJsonLd } from "~/lib/jsonld";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -41,6 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <JsonLd data={generateSiteJsonLd()} />
       </head>
       <body className="min-h-screen flex flex-col">
         <Header />

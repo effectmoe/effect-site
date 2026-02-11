@@ -2,6 +2,8 @@ import { data } from "react-router";
 import type { Route } from "./+types/articles.$slug";
 import { getArticleBySlug, getArticleContent } from "~/lib/notion.server";
 import { cached } from "~/lib/cache.server";
+import { JsonLd } from "~/components/json-ld";
+import { generateArticleJsonLd } from "~/lib/jsonld";
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
@@ -44,7 +46,9 @@ export default function ArticleDetail({ loaderData }: Route.ComponentProps) {
   const { article, content } = loaderData;
 
   return (
-    <article className="mx-auto max-w-3xl">
+    <>
+      <JsonLd data={generateArticleJsonLd(article)} />
+      <article className="mx-auto max-w-3xl">
       <header className="mb-8">
         {article.category && (
           <span className="text-sm font-medium uppercase tracking-wide text-blue-600">
@@ -75,5 +79,6 @@ export default function ArticleDetail({ loaderData }: Route.ComponentProps) {
         dangerouslySetInnerHTML={{ __html: content }}
       />
     </article>
+    </>
   );
 }
