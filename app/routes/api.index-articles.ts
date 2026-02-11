@@ -1,5 +1,6 @@
 import type { Route } from "./+types/api.chat";
 import { getArticles, blocksToPlainText } from "~/lib/notion.server";
+import { authenticateRequest } from "~/lib/auth.server";
 
 const NOTION_API_BASE = "https://api.notion.com/v1";
 const CHUNK_SIZE = 500; // characters per chunk
@@ -53,6 +54,11 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   const env = context.cloudflare.env;
+
+  // Auth check
+  const authError = authenticateRequest(request, env.ADMIN_API_KEY);
+  if (authError) return authError;
+
   if (!env.DB || !env.AI) {
     return Response.json({ error: "DB or AI binding not available" }, { status: 503 });
   }

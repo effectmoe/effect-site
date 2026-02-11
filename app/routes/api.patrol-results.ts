@@ -1,4 +1,5 @@
 import type { Route } from "./+types/api.chat";
+import { authenticateRequest } from "~/lib/auth.server";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
@@ -28,6 +29,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   const env = context.cloudflare.env;
+
+  const authError = authenticateRequest(request, env.ADMIN_API_KEY);
+  if (authError) return authError;
+
   if (!env.DB) {
     return Response.json({ error: "Database not available" }, { status: 503 });
   }

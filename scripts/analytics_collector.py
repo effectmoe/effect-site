@@ -17,6 +17,7 @@ Requirements:
 import asyncio
 import json
 import logging
+import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -32,14 +33,15 @@ from google.analytics.data_v1beta.types import (
 )
 from googleapiclient.discovery import build
 
-# --- Configuration ---
+# --- Configuration (from environment) ---
 GA4_CREDENTIALS_PATH = Path.home() / "mcp-credentials" / "claudemcp-451912-2830c1577732.json"
 GSC_CREDENTIALS_PATH = Path.home() / "mcp-credentials" / "claudemcp-451912-8cb2cd63795c.json"
 GA4_PROPERTY_ID = "350046473"
-SITE_URL = "https://effect-site.effectmoe.workers.dev"
+SITE_URL = os.environ.get("EFFECT_SITE_URL", "https://effect-site.effectmoe.workers.dev")
 API_URL = f"{SITE_URL}/api/analytics"
-TELEGRAM_BOT_TOKEN = "8226533383:AAGA0Tzo-tiEC_7j_MTnlaO2vNk0iq3xGg8"
-TELEGRAM_CHAT_ID = "8588084195"
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 # GSC site URL - use verified property; workers.dev may not be registered
 # Will auto-detect from available properties
@@ -180,11 +182,16 @@ async def post_to_d1(source: str, rows: list[dict]) -> bool:
     if not rows:
         return True
 
+    headers = {}
+    if ADMIN_API_KEY:
+        headers["X-API-Key"] = ADMIN_API_KEY
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 API_URL,
                 json={"source": source, "rows": rows},
+                headers=headers,
                 timeout=aiohttp.ClientTimeout(total=30),
             ) as resp:
                 if resp.status == 200:
