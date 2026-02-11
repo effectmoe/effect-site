@@ -8,45 +8,45 @@ interface JsonLdArticle {
   tags: string[];
 }
 
-const SITE_URL = "https://effect.moe";
-const SITE_NAME = "effect.moe";
-
-export function generateSiteJsonLd(): object {
+export function generateSiteJsonLd(siteUrl: string): object {
   return {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Organization",
-        "@id": `${SITE_URL}/#organization`,
-        name: SITE_NAME,
-        url: SITE_URL,
+        "@id": `${siteUrl}/#organization`,
+        name: "effect.moe",
+        url: siteUrl,
         description: "LLMO & DX に特化したメディアサイト",
       },
       {
         "@type": "WebSite",
-        "@id": `${SITE_URL}/#website`,
-        url: SITE_URL,
-        name: SITE_NAME,
-        publisher: { "@id": `${SITE_URL}/#organization` },
+        "@id": `${siteUrl}/#website`,
+        url: siteUrl,
+        name: "effect.moe",
+        publisher: { "@id": `${siteUrl}/#organization` },
         inLanguage: "ja",
       },
     ],
   };
 }
 
-export function generateArticleJsonLd(article: JsonLdArticle): object {
+export function generateArticleJsonLd(
+  article: JsonLdArticle,
+  siteUrl: string,
+): object {
   return {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Article",
-        "@id": `${SITE_URL}/articles/${article.slug}`,
+        "@id": `${siteUrl}/articles/${article.slug}`,
         headline: article.title,
         description: article.description,
         datePublished: article.publishedAt,
-        author: { "@id": `${SITE_URL}/#organization` },
-        publisher: { "@id": `${SITE_URL}/#organization` },
-        isPartOf: { "@id": `${SITE_URL}/#website` },
+        author: { "@id": `${siteUrl}/#organization` },
+        publisher: { "@id": `${siteUrl}/#organization` },
+        isPartOf: { "@id": `${siteUrl}/#website` },
         inLanguage: "ja",
         ...(article.coverImage ? { image: article.coverImage } : {}),
         ...(article.tags.length > 0
@@ -56,18 +56,18 @@ export function generateArticleJsonLd(article: JsonLdArticle): object {
       {
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+          { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
           {
             "@type": "ListItem",
             position: 2,
             name: "Articles",
-            item: `${SITE_URL}/articles`,
+            item: `${siteUrl}/articles`,
           },
           {
             "@type": "ListItem",
             position: 3,
             name: article.title,
-            item: `${SITE_URL}/articles/${article.slug}`,
+            item: `${siteUrl}/articles/${article.slug}`,
           },
         ],
       },
@@ -75,16 +75,19 @@ export function generateArticleJsonLd(article: JsonLdArticle): object {
   };
 }
 
-export function generateArticleListJsonLd(articles: JsonLdArticle[]): object {
+export function generateArticleListJsonLd(
+  articles: JsonLdArticle[],
+  siteUrl: string,
+): object {
   return {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "CollectionPage",
-        "@id": `${SITE_URL}/articles`,
+        "@id": `${siteUrl}/articles`,
         name: "Articles — effect.moe",
         description: "LLMO & DX に関する記事一覧",
-        isPartOf: { "@id": `${SITE_URL}/#website` },
+        isPartOf: { "@id": `${siteUrl}/#website` },
         inLanguage: "ja",
       },
       {
@@ -92,7 +95,7 @@ export function generateArticleListJsonLd(articles: JsonLdArticle[]): object {
         itemListElement: articles.map((article, index) => ({
           "@type": "ListItem",
           position: index + 1,
-          url: `${SITE_URL}/articles/${article.slug}`,
+          url: `${siteUrl}/articles/${article.slug}`,
           name: article.title,
         })),
       },

@@ -1,4 +1,7 @@
-export async function loader() {
+import type { Route } from "./+types/robots[.]txt";
+
+export async function loader({ context }: Route.LoaderArgs) {
+  const siteUrl = context.cloudflare.env.SITE_URL;
   const content = [
     "User-agent: *",
     "Allow: /",
@@ -25,10 +28,10 @@ export async function loader() {
     "User-agent: Applebot-Extended",
     "Allow: /",
     "",
-    "Sitemap: https://effect.moe/sitemap.xml",
+    `Sitemap: ${siteUrl}/sitemap.xml`,
     "",
     "# AI-readable site summary",
-    "# See: https://effect.moe/llms.txt",
+    `# See: ${siteUrl}/llms.txt`,
   ].join("\n");
 
   return new Response(content, {

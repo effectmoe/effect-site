@@ -4,26 +4,27 @@ import { cached } from "~/lib/cache.server";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
+  const siteUrl = env.SITE_URL;
   const articles = await cached(env.CACHE, "articles:list", () =>
     getArticles(env),
   );
 
   const staticPages = [
-    { loc: "https://effect.moe/", priority: "1.0", changefreq: "daily" },
+    { loc: `${siteUrl}/`, priority: "1.0", changefreq: "daily" },
     {
-      loc: "https://effect.moe/articles",
+      loc: `${siteUrl}/articles`,
       priority: "0.8",
       changefreq: "daily",
     },
     {
-      loc: "https://effect.moe/about",
+      loc: `${siteUrl}/about`,
       priority: "0.5",
       changefreq: "monthly",
     },
   ];
 
   const articlePages = articles.map((a) => ({
-    loc: `https://effect.moe/articles/${a.slug}`,
+    loc: `${siteUrl}/articles/${a.slug}`,
     priority: "0.7",
     changefreq: "weekly",
     lastmod: a.publishedAt ?? undefined,

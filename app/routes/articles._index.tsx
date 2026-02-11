@@ -10,7 +10,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   const articles = await cached(env.CACHE, "articles:list", () =>
     getArticles(env),
   );
-  return { articles };
+  return { articles, siteUrl: env.SITE_URL };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -24,7 +24,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function ArticleList({ loaderData }: Route.ComponentProps) {
-  const { articles } = loaderData;
+  const { articles, siteUrl } = loaderData;
 
   if (articles.length === 0) {
     return (
@@ -37,7 +37,7 @@ export default function ArticleList({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <JsonLd data={generateArticleListJsonLd(articles)} />
+      <JsonLd data={generateArticleListJsonLd(articles, siteUrl)} />
       <div>
         <h1 className="mb-8 text-2xl font-bold">Articles</h1>
       <div className="space-y-6">

@@ -2,7 +2,9 @@ import type { Article } from "~/lib/notion.server";
 import { getArticles } from "~/lib/notion.server";
 import { cached } from "~/lib/cache.server";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function generateLlmsTxt(env: any): Promise<string> {
+  const siteUrl: string = env.SITE_URL;
   const articles = await cached(env.CACHE, "articles:list", () =>
     getArticles(env),
   );
@@ -12,9 +14,9 @@ export async function generateLlmsTxt(env: any): Promise<string> {
     "> LLMO (Large Language Model Optimization) & DX に特化したメディアサイト。AI時代のWebマーケティング手法を研究・発信。",
     "",
     "## Main Pages",
-    "- [Home](https://effect.moe/): effect.moe top page",
-    "- [Articles](https://effect.moe/articles): LLMO & DX article list",
-    "- [About](https://effect.moe/about): About effect.moe",
+    `- [Home](${siteUrl}/): effect.moe top page`,
+    `- [Articles](${siteUrl}/articles): LLMO & DX article list`,
+    `- [About](${siteUrl}/about): About effect.moe`,
     "",
   ];
 
@@ -31,7 +33,7 @@ export async function generateLlmsTxt(env: any): Promise<string> {
     for (const article of categoryArticles) {
       const desc = article.description ? `: ${article.description}` : "";
       lines.push(
-        `- [${article.title}](https://effect.moe/articles/${article.slug})${desc}`,
+        `- [${article.title}](${siteUrl}/articles/${article.slug})${desc}`,
       );
     }
     lines.push("");

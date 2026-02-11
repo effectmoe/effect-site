@@ -6,6 +6,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -33,10 +34,20 @@ export const links: Route.LinksFunction = () => [
 export async function loader({ request, context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
   const extraHeaders = await aiCrawlerMiddleware(request, env);
-  return data(null, { headers: extraHeaders });
+  return data({ siteUrl: env.SITE_URL }, { headers: extraHeaders });
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let siteUrl = "https://effect.moe";
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const loaderData = useLoaderData<typeof loader>();
+    if (loaderData?.siteUrl) siteUrl = loaderData.siteUrl;
+  } catch {
+    // ErrorBoundary may not have loader data
+  }
+
   return (
     <html lang="ja">
       <head>
@@ -44,7 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        <JsonLd data={generateSiteJsonLd()} />
+        <JsonLd data={generateSiteJsonLd(siteUrl)} />
       </head>
       <body className="min-h-screen flex flex-col">
         <Header />

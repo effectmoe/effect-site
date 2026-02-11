@@ -24,7 +24,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     600,
   );
 
-  return { article, content };
+  return { article, content, siteUrl: env.SITE_URL };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
@@ -43,11 +43,11 @@ export function meta({ data: loaderData }: Route.MetaArgs) {
 }
 
 export default function ArticleDetail({ loaderData }: Route.ComponentProps) {
-  const { article, content } = loaderData;
+  const { article, content, siteUrl } = loaderData;
 
   return (
     <>
-      <JsonLd data={generateArticleJsonLd(article)} />
+      <JsonLd data={generateArticleJsonLd(article, siteUrl)} />
       <article className="mx-auto max-w-3xl">
       <header className="mb-8">
         {article.category && (
