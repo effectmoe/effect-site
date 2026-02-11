@@ -17,6 +17,9 @@ SITE_NAME = "effect.moe"
 SITE_URL = "https://effect.moe"
 NOTION_DATABASE_ARTICLES = "304b802cb0c68148bb0cf1afaf06ff7d"
 NOTION_API_KEY = ""
+# OpenClaw Gateway chat endpoint URL (set via Tailscale Funnel or direct URL)
+# Leave empty to use FAQ fallback mode only
+CHAT_GATEWAY_URL = ""
 
 [dev]
 port = 8788

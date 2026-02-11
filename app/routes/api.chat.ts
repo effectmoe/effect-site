@@ -1,6 +1,6 @@
 import type { Route } from "./+types/api.chat";
 
-// Simple keyword-based FAQ matching (fallback when OpenClaw is unavailable)
+// Simple keyword-based FAQ matching (fallback when OpenClaw Gateway is unavailable)
 const STATIC_FAQ: Array<{ keywords: string[]; answer: string }> = [
   {
     keywords: ["llmo", "what", "とは"],
@@ -39,6 +39,40 @@ function findFaqAnswer(message: string): string | null {
   return null;
 }
 
+/**
+ * Try OpenClaw Gateway (Ollama) for AI-powered chat responses.
+ * Returns null if the gateway is unavailable or not configured.
+ */
+async function tryGatewayChat(
+  message: string,
+  gatewayUrl: string,
+): Promise<{ reply: string; source: string } | null> {
+  if (!gatewayUrl) return null;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    const res = await fetch(`${gatewayUrl}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as { reply?: string; source?: string };
+    if (data.reply) {
+      return { reply: data.reply, source: data.source || "ollama" };
+    }
+  } catch {
+    // Gateway unavailable or timed out, fall through to FAQ
+  }
+  return null;
+}
+
 export async function action({ request, context }: Route.ActionArgs) {
   if (request.method !== "POST") {
     return Response.json({ error: "Method not allowed" }, { status: 405 });
@@ -51,8 +85,16 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ error: "Message is required" }, { status: 400 });
   }
 
-  // Try D1 FAQ cache first
   const env = context.cloudflare.env;
+
+  // 1. Try OpenClaw Gateway (Ollama) for AI-powered responses
+  const gatewayUrl = env.CHAT_GATEWAY_URL;
+  const gatewayResult = await tryGatewayChat(message, gatewayUrl || "");
+  if (gatewayResult) {
+    return Response.json(gatewayResult);
+  }
+
+  // 2. Try D1 FAQ cache
   if (env.DB) {
     try {
       const result = await env.DB.prepare(
@@ -72,13 +114,13 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
   }
 
-  // Static FAQ fallback
+  // 3. Static FAQ fallback
   const faqAnswer = findFaqAnswer(message);
   if (faqAnswer) {
     return Response.json({ reply: faqAnswer, source: "static_faq" });
   }
 
-  // Default response when no match found
+  // 4. Default response when no match found
   return Response.json({
     reply: "ご質問ありがとうございます。現在AIアシスタントを準備中です。LLMO・DXに関する詳しい情報は記事一覧をご覧ください。",
     source: "default",
