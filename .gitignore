@@ -16,3 +16,6 @@ worker-configuration.d.ts
 # Patrol data (runtime generated)
 scripts/patrol-data/
 
+# launchd plists (contain secrets)
+scripts/*.plist
+
