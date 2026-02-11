@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.effectmoe.analytics-collector</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/tonychustudio/projects/seo-llmo-analyzer/.venv/bin/python</string>
+        <string>/Users/tonychustudio/projects/effect-site/scripts/analytics_collector.py</string>
+        <string>--days</string>
+        <string>1</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/Users/tonychustudio/projects/effect-site/scripts/patrol-data/analytics-stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/tonychustudio/projects/effect-site/scripts/patrol-data/analytics-stderr.log</string>
+    <key>WorkingDirectory</key>
+    <string>/Users/tonychustudio/projects/effect-site</string>
+</dict>
+</plist>
