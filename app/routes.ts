@@ -7,6 +7,7 @@ export default [
   route("about", "routes/about.tsx"),
   route("api/crawler-stats", "routes/api.crawler-stats.ts"),
   route("api/chat", "routes/api.chat.ts"),
+  route("api/patrol-results", "routes/api.patrol-results.ts"),
   route("llms.txt", "routes/llms[.]txt.ts"),
   route("robots.txt", "routes/robots[.]txt.ts"),
   route("sitemap.xml", "routes/sitemap[.]xml.ts"),
