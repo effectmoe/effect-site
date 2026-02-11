@@ -5,4 +5,5 @@ export default [
   route("articles", "routes/articles._index.tsx"),
   route("articles/:slug", "routes/articles.$slug.tsx"),
   route("about", "routes/about.tsx"),
+  route("api/crawler-stats", "routes/api.crawler-stats.ts"),
 ] satisfies RouteConfig;
