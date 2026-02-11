@@ -12,6 +12,7 @@
     "typecheck": "npm run cf-typegen && react-router typegen && tsc -b"
   },
   "dependencies": {
+    "@notionhq/client": "^5.9.0",
     "isbot": "^5.1.31",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

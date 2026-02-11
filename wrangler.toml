@@ -1,0 +1,21 @@
+name = "effect-site"
+main = "./workers/app.ts"
+compatibility_date = "2025-12-30"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "effect-site-db"
+database_id = "PLACEHOLDER_CREATE_IN_DASHBOARD"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "PLACEHOLDER_CREATE_IN_DASHBOARD"
+
+[vars]
+SITE_NAME = "effect.moe"
+SITE_URL = "https://effect.moe"
+NOTION_DATABASE_ARTICLES = "PLACEHOLDER_NOTION_DB_ID"
+
+[dev]
+port = 8788
