@@ -1,12 +1,12 @@
-import { Client } from "@notionhq/client";
+const NOTION_API_BASE = "https://api.notion.com/v1";
+const NOTION_VERSION = "2022-06-28";
 
-let notionClient: Client | null = null;
-
-function getNotion(apiKey: string): Client {
-  if (!notionClient) {
-    notionClient = new Client({ auth: apiKey });
-  }
-  return notionClient;
+function headers(apiKey: string): Record<string, string> {
+  return {
+    Authorization: `Bearer ${apiKey}`,
+    "Notion-Version": NOTION_VERSION,
+    "Content-Type": "application/json",
+  };
 }
 
 export interface Article {
@@ -25,45 +25,74 @@ export async function getArticles(env: {
   NOTION_API_KEY: string;
   NOTION_DATABASE_ARTICLES: string;
 }): Promise<Article[]> {
-  const notion = getNotion(env.NOTION_API_KEY);
-  const response = await notion.databases.query({
-    database_id: env.NOTION_DATABASE_ARTICLES,
-    filter: {
-      property: "Published",
-      checkbox: { equals: true },
+  const res = await fetch(
+    `${NOTION_API_BASE}/databases/${env.NOTION_DATABASE_ARTICLES}/query`,
+    {
+      method: "POST",
+      headers: headers(env.NOTION_API_KEY),
+      body: JSON.stringify({
+        filter: {
+          property: "Published",
+          checkbox: { equals: true },
+        },
+        sorts: [{ property: "PublishedAt", direction: "descending" }],
+      }),
     },
-    sorts: [{ property: "PublishedAt", direction: "descending" }],
-  });
+  );
 
-  return response.results.map(pageToArticle);
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Notion API error (getArticles):", res.status, text);
+    return [];
+  }
+
+  const data = (await res.json()) as { results: unknown[] };
+  return data.results.map(pageToArticle);
 }
 
 export async function getArticleBySlug(
   env: { NOTION_API_KEY: string; NOTION_DATABASE_ARTICLES: string },
   slug: string,
 ): Promise<Article | null> {
-  const notion = getNotion(env.NOTION_API_KEY);
-  const response = await notion.databases.query({
-    database_id: env.NOTION_DATABASE_ARTICLES,
-    filter: {
-      and: [
-        { property: "Slug", rich_text: { equals: slug } },
-        { property: "Published", checkbox: { equals: true } },
-      ],
+  const res = await fetch(
+    `${NOTION_API_BASE}/databases/${env.NOTION_DATABASE_ARTICLES}/query`,
+    {
+      method: "POST",
+      headers: headers(env.NOTION_API_KEY),
+      body: JSON.stringify({
+        filter: {
+          and: [
+            { property: "Slug", rich_text: { equals: slug } },
+            { property: "Published", checkbox: { equals: true } },
+          ],
+        },
+      }),
     },
-  });
+  );
 
-  if (response.results.length === 0) return null;
-  return pageToArticle(response.results[0]);
+  if (!res.ok) return null;
+
+  const data = (await res.json()) as { results: unknown[] };
+  if (data.results.length === 0) return null;
+  return pageToArticle(data.results[0]);
 }
 
 export async function getArticleContent(
   apiKey: string,
   pageId: string,
 ): Promise<string> {
-  const notion = getNotion(apiKey);
-  const blocks = await notion.blocks.children.list({ block_id: pageId });
-  return blocksToHtml(blocks.results);
+  const res = await fetch(
+    `${NOTION_API_BASE}/blocks/${pageId}/children?page_size=100`,
+    {
+      method: "GET",
+      headers: headers(apiKey),
+    },
+  );
+
+  if (!res.ok) return "<p>Failed to load article content.</p>";
+
+  const data = (await res.json()) as { results: unknown[] };
+  return blocksToHtml(data.results);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
