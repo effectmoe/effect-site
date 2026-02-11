@@ -12,6 +12,7 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { Header } from "./components/header";
 import { Footer } from "./components/footer";
+import { ChatWidget } from "~/components/chat-widget";
 import { aiCrawlerMiddleware } from "~/lib/middleware.server";
 import { JsonLd } from "~/components/json-ld";
 import { generateSiteJsonLd } from "~/lib/jsonld";
@@ -51,6 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
         <Footer />
+        <ChatWidget />
         <ScrollRestoration />
         <Scripts />
       </body>
