@@ -102,27 +102,61 @@ async function findSimilarChunks(
 }
 
 /**
+ * Fetch dynamic system prompt from Prompt Gateway (Notion-managed).
+ * Falls back to default prompt if gateway is unavailable.
+ */
+async function fetchSystemPrompt(
+  gatewayUrl: string,
+  apiKey: string,
+): Promise<string | null> {
+  if (!gatewayUrl || !apiKey) return null;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(
+      `${gatewayUrl}/instructions?project=effect-site&task=chat-assistant&format=text`,
+      {
+        headers: { "X-API-Key": apiKey },
+        signal: controller.signal,
+      },
+    );
+    clearTimeout(timeout);
+
+    if (!res.ok) return null;
+    const text = await res.text();
+    return text.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+const DEFAULT_SYSTEM_PROMPT = `あなたはeffect.moe（LLMO & DXメディアサイト）のAIアシスタントです。
+以下の記事コンテキストに基づいて、ユーザーの質問に日本語で簡潔に回答してください。
+コンテキストに情報がない場合は「記事に該当する情報が見つかりませんでした」と正直に伝えてください。
+回答は200文字以内でまとめてください。`;
+
+/**
  * Generate a response using Workers AI with RAG context.
+ * System prompt is dynamically fetched from Prompt Gateway if available.
  */
 async function generateRAGResponse(
   ai: Ai,
   query: string,
   chunks: Array<{ title: string; text: string }>,
+  systemPrompt?: string | null,
 ): Promise<string> {
   const context = chunks
     .map((c, i) => `[${i + 1}] ${c.title}:\n${c.text}`)
     .join("\n\n");
 
+  const prompt = systemPrompt || DEFAULT_SYSTEM_PROMPT;
+
   const messages = [
     {
       role: "system" as const,
-      content: `あなたはeffect.moe（LLMO & DXメディアサイト）のAIアシスタントです。
-以下の記事コンテキストに基づいて、ユーザーの質問に日本語で簡潔に回答してください。
-コンテキストに情報がない場合は「記事に該当する情報が見つかりませんでした」と正直に伝えてください。
-回答は200文字以内でまとめてください。
-
---- 記事コンテキスト ---
-${context}`,
+      content: `${prompt}\n\n--- 記事コンテキスト ---\n${context}`,
     },
     {
       role: "user" as const,
@@ -135,7 +169,6 @@ ${context}`,
     max_tokens: 300,
   });
 
-  // Workers AI returns { response: string } for text generation
   const response = (result as { response?: string })?.response;
   return response || "回答の生成に失敗しました。";
 }
@@ -199,10 +232,15 @@ export async function action({ request, context }: Route.ActionArgs) {
     try {
       const chunks = await findSimilarChunks(env.DB, env.AI, message, 3);
       if (chunks.length > 0 && chunks[0].score > 0.5) {
-        const reply = await generateRAGResponse(env.AI, message, chunks);
+        // Fetch dynamic system prompt from Prompt Gateway
+        const systemPrompt = await fetchSystemPrompt(
+          env.PROMPT_GATEWAY_URL || "",
+          env.PROMPT_GATEWAY_KEY || "",
+        );
+        const reply = await generateRAGResponse(env.AI, message, chunks, systemPrompt);
         return Response.json({
           reply,
-          source: "rag",
+          source: systemPrompt ? "rag+gateway" : "rag",
           context: chunks.map((c) => ({
             title: c.title,
             slug: c.slug,

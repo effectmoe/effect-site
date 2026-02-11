@@ -22,6 +22,7 @@ NOTION_DATABASE_ARTICLES = "304b802cb0c68148bb0cf1afaf06ff7d"
 # OpenClaw Gateway chat endpoint URL (set via Tailscale Funnel or direct URL)
 # Leave empty to use FAQ fallback mode only
 CHAT_GATEWAY_URL = ""
+PROMPT_GATEWAY_URL = "https://prompt-gateway.effectmoe.workers.dev"
 
 [dev]
 port = 8788
