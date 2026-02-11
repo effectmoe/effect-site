@@ -12,6 +12,9 @@ database_id = "2c3064de-2029-4a98-9aa0-c914054d8c1f"
 binding = "CACHE"
 id = "d44d69f96be944ff9de936220c018d96"
 
+[ai]
+binding = "AI"
+
 [vars]
 SITE_NAME = "effect.moe"
 SITE_URL = "https://effect-site.effectmoe.workers.dev"

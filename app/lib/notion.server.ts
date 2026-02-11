@@ -112,6 +112,46 @@ function pageToArticle(page: any): Article {
   };
 }
 
+/**
+ * Convert Notion blocks to plain text for RAG indexing.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function blocksToPlainText(blocks: any[]): string {
+  return blocks
+    .map((block) => {
+      const type = block.type;
+      switch (type) {
+        case "paragraph":
+          return richTextToPlain(block.paragraph.rich_text);
+        case "heading_1":
+          return richTextToPlain(block.heading_1.rich_text);
+        case "heading_2":
+          return richTextToPlain(block.heading_2.rich_text);
+        case "heading_3":
+          return richTextToPlain(block.heading_3.rich_text);
+        case "bulleted_list_item":
+          return richTextToPlain(block.bulleted_list_item.rich_text);
+        case "numbered_list_item":
+          return richTextToPlain(block.numbered_list_item.rich_text);
+        case "code":
+          return richTextToPlain(block.code.rich_text);
+        case "quote":
+          return richTextToPlain(block.quote.rich_text);
+        default:
+          return "";
+      }
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function richTextToPlain(richText: any[]): string {
+  if (!richText?.length) return "";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return richText.map((rt: any) => rt.plain_text).join("");
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function blocksToHtml(blocks: any[]): string {
   return blocks.map(blockToHtml).filter(Boolean).join("\n");
