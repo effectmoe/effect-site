@@ -25,6 +25,11 @@ export async function getArticles(env: {
   NOTION_API_KEY: string;
   NOTION_DATABASE_ARTICLES: string;
 }): Promise<Article[]> {
+  if (!env.NOTION_API_KEY || !env.NOTION_DATABASE_ARTICLES) {
+    console.error("Notion config missing - returning empty articles");
+    return [];
+  }
+
   const res = await fetch(
     `${NOTION_API_BASE}/databases/${env.NOTION_DATABASE_ARTICLES}/query`,
     {
@@ -37,6 +42,7 @@ export async function getArticles(env: {
         },
         sorts: [{ property: "PublishedAt", direction: "descending" }],
       }),
+      signal: AbortSignal.timeout(5000),
     },
   );
 
@@ -67,6 +73,7 @@ export async function getArticleBySlug(
           ],
         },
       }),
+      signal: AbortSignal.timeout(5000),
     },
   );
 
@@ -86,6 +93,7 @@ export async function getArticleContent(
     {
       method: "GET",
       headers: headers(apiKey),
+      signal: AbortSignal.timeout(5000),
     },
   );
 

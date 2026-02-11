@@ -24,5 +24,9 @@ NOTION_DATABASE_ARTICLES = "304b802cb0c68148bb0cf1afaf06ff7d"
 CHAT_GATEWAY_URL = ""
 PROMPT_GATEWAY_URL = "https://prompt-gateway.effectmoe.workers.dev"
 
+# Cron trigger: warm cache every 5 minutes
+[triggers]
+crons = ["*/5 * * * *"]
+
 [dev]
 port = 8788
