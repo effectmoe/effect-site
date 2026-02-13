@@ -8,7 +8,7 @@
  *   X-R2-Path: manga/{slug}/panel-{order}.webp
  *   Content-Type: image/webp | audio/mpeg | etc.
  *
- * Returns: { r2_url: "https://media.effect.moe/..." }
+ * Returns: { r2_url: "{SITE_URL}/media/..." }
  */
 import type { Route } from "./+types/api.sync.media";
 import { authenticateRequest } from "~/lib/auth.server";
@@ -59,8 +59,8 @@ export async function action({ request, context }: Route.ActionArgs) {
     httpMetadata: { contentType },
   });
 
-  // Public URL assumes R2 custom domain or public bucket
-  const publicUrl = `https://media.effect.moe/${r2Path}`;
+  // Public URL served via /media/* Worker route
+  const publicUrl = `${env.SITE_URL}/media/${r2Path}`;
 
   return Response.json({
     r2_url: publicUrl,

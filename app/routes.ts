@@ -6,6 +6,7 @@ export default [
   route("articles/:slug", "routes/articles.$slug.tsx"),
   route("articles/:slug/p/:page", "routes/articles.$slug.p$page.tsx"),
   route("about", "routes/about.tsx"),
+  route("media/*", "routes/media.$.ts"),
   route("api/sync/media", "routes/api.sync.media.ts"),
   route("api/sync/content", "routes/api.sync.content.ts"),
   route("api/crawler-stats", "routes/api.crawler-stats.ts"),
