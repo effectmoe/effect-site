@@ -15,9 +15,9 @@ id = "28ffe2354a8d43158592b036e22aa49a"
 [ai]
 binding = "AI"
 
-[[r2_buckets]]
-binding = "MEDIA"
-bucket_name = "effect-site-media"
+# [[r2_buckets]]
+# binding = "MEDIA"
+# bucket_name = "effect-site-media"
 
 [vars]
 SITE_NAME = "effect.moe"
