@@ -1,14 +1,17 @@
 import { Link } from "react-router";
 import type { Route } from "./+types/_index";
-import { getArticles } from "~/lib/notion.server";
+import { getClustersWithArticles } from "~/lib/d1.server";
 import { cached } from "~/lib/cache.server";
+import { ClusterSection } from "~/components/cluster-section";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = context.cloudflare.env;
-  const articles = await cached(env.CACHE, "articles:list", () =>
-    getArticles(env),
+
+  const clusters = await cached(env.CACHE, "grid:clusters", () =>
+    getClustersWithArticles(env.DB),
   );
-  return { articles: articles.slice(0, 5) };
+
+  return { clusters };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -23,68 +26,63 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { articles } = loaderData;
+  const { clusters } = loaderData;
 
   return (
-    <div>
-      <section className="mb-12">
-        <h1 className="mb-4 text-3xl font-bold">effect.moe</h1>
-        <p className="text-lg text-gray-600">
-          LLMO (Large Language Model Optimization) & DX
-          に特化したメディアサイト
-        </p>
-      </section>
-
-      <section>
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Latest Articles</h2>
-          <Link
-            to="/articles"
-            className="text-sm text-blue-600 hover:underline"
-          >
-            View all
-          </Link>
-        </div>
-
-        {articles.length === 0 ? (
-          <p className="text-gray-500">No articles published yet.</p>
-        ) : (
-          <div className="space-y-6">
-            {articles.map((article) => (
-              <article
-                key={article.id}
-                className="border-b border-gray-100 pb-6"
-              >
-                <Link
-                  to={`/articles/${article.slug}`}
-                  className="group block"
+    <div className="lg:flex lg:gap-8">
+      {/* Desktop sidebar */}
+      <nav className="hidden lg:block lg:w-48 lg:shrink-0">
+        <div className="sticky top-24">
+          <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-400">
+            Series
+          </h2>
+          <ul className="space-y-1">
+            {clusters.map((cluster) => (
+              <li key={cluster.id}>
+                <a
+                  href={`#cluster-${cluster.slug}`}
+                  className="block rounded-sm px-2 py-1.5 text-sm text-gray-600 transition-colors duration-150 ease-in-out hover:bg-gray-50 hover:text-gray-900"
                 >
-                  {article.category && (
-                    <span className="text-xs font-medium uppercase tracking-wide text-blue-600">
-                      {article.category}
-                    </span>
-                  )}
-                  <h3 className="mt-1 text-xl font-semibold group-hover:text-blue-600">
-                    {article.title}
-                  </h3>
-                  {article.description && (
-                    <p className="mt-2 text-gray-600">
-                      {article.description}
-                    </p>
-                  )}
-                  {article.publishedAt && (
-                    <time className="mt-2 block text-sm text-gray-400">
-                      {new Date(
-                        article.publishedAt,
-                      ).toLocaleDateString("ja-JP")}
-                    </time>
-                  )}
-                </Link>
-              </article>
+                  {cluster.name}
+                  <span className="ml-1.5 text-xs text-gray-400">
+                    {cluster.articles.length}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+
+      {/* Main grid */}
+      <main className="min-w-0 flex-1">
+        <section className="mb-10">
+          <h1 className="text-2xl font-bold text-gray-900">effect.moe</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            LLMO & DX Manga Media
+          </p>
+        </section>
+
+        {clusters.length === 0 ? (
+          <p className="text-gray-500">No series published yet.</p>
+        ) : (
+          <div className="space-y-12">
+            {clusters.map((cluster) => (
+              <ClusterSection key={cluster.id} cluster={cluster} />
             ))}
           </div>
         )}
-      </section>
+
+        {/* Fallback link to legacy articles list */}
+        <div className="mt-16 border-t border-gray-100 pt-6">
+          <Link
+            to="/articles"
+            className="text-sm text-gray-400 hover:text-gray-600"
+          >
+            View all articles (legacy)
+          </Link>
+        </div>
+      </main>
     </div>
   );
 }

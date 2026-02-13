@@ -6,18 +6,22 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "effect-site-db"
-database_id = "2c3064de-2029-4a98-9aa0-c914054d8c1f"
+database_id = "dda0c5b6-c508-492a-8b9c-f85efc3e0fd4"
 
 [[kv_namespaces]]
 binding = "CACHE"
-id = "d44d69f96be944ff9de936220c018d96"
+id = "28ffe2354a8d43158592b036e22aa49a"
 
 [ai]
 binding = "AI"
 
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "effect-site-media"
+
 [vars]
 SITE_NAME = "effect.moe"
-SITE_URL = "https://effect-site.effectmoe.workers.dev"
+SITE_URL = "https://effect-site.openclaw-agent.workers.dev"
 NOTION_DATABASE_ARTICLES = "304b802cb0c68148bb0cf1afaf06ff7d"
 # OpenClaw Gateway chat endpoint URL (set via Tailscale Funnel or direct URL)
 # Leave empty to use FAQ fallback mode only
