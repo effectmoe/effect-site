@@ -19,6 +19,7 @@ export interface PanelData {
   image_height: number | null;
   transcript: string | null;
   ai_context: string | null;
+  synced_at: string | null;
 }
 
 export interface ArticleSummary {
@@ -152,7 +153,7 @@ export async function getArticleWithPanels(
     .prepare(
       `
     SELECT id, panel_order, image_url, image_width, image_height,
-           transcript, ai_context
+           transcript, ai_context, synced_at
     FROM panels
     WHERE article_id = ?
     ORDER BY panel_order ASC

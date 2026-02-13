@@ -4,7 +4,7 @@ export default [
   index("routes/_index.tsx"),
   route("articles", "routes/articles._index.tsx"),
   route("articles/:slug", "routes/articles.$slug.tsx"),
-  route("articles/:slug/p:page", "routes/articles.$slug.p$page.tsx"),
+  route("articles/:slug/p/:page", "routes/articles.$slug.p$page.tsx"),
   route("about", "routes/about.tsx"),
   route("api/sync/media", "routes/api.sync.media.ts"),
   route("api/sync/content", "routes/api.sync.content.ts"),

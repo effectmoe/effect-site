@@ -8,6 +8,7 @@ import {
   type ArticleFull,
   type ArticleSummary,
 } from "~/lib/d1.server";
+import { panelImageUrl } from "~/lib/panel-image";
 import { cached } from "~/lib/cache.server";
 import { useAudioSync } from "~/hooks/use-audio-sync";
 import { JsonLd } from "~/components/json-ld";
@@ -81,6 +82,8 @@ export default function MangaReaderRoute({
   const {
     audioRef,
     isPlaying,
+    isBuffering,
+    playError,
     isAutoMode,
     currentPanel,
     progress,
@@ -102,7 +105,7 @@ export default function MangaReaderRoute({
       window.history.replaceState(
         null,
         "",
-        `/articles/${article.slug}/p${newPage}`,
+        `/articles/${article.slug}/p/${newPage}`,
       );
     },
     [article.slug],
@@ -234,10 +237,15 @@ export default function MangaReaderRoute({
           <div className="hidden w-12 flex-col items-center gap-2 border-l border-white/10 py-4 md:flex">
             <button
               onClick={isPlaying ? pause : play}
-              className="rounded-sm bg-white/10 p-2 text-[10px] font-medium text-white transition-colors duration-150 hover:bg-white/20"
-              title={isPlaying ? "Pause" : "Play"}
+              className={`rounded-sm p-2 text-[10px] font-medium transition-colors duration-150 ${
+                isBuffering
+                  ? "animate-pulse bg-white/5 text-white/40"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              }`}
+              title={isBuffering ? "Buffering..." : isPlaying ? "Pause" : "Play"}
+              disabled={isBuffering}
             >
-              {isPlaying ? "||" : "\u25B6"}
+              {isBuffering ? "..." : isPlaying ? "||" : "\u25B6"}
             </button>
             <button
               onClick={toggleAutoMode}
@@ -257,6 +265,11 @@ export default function MangaReaderRoute({
                   style={{ height: `${progress * 100}%` }}
                 />
               </div>
+            )}
+            {playError && (
+              <p className="px-1 text-center text-[9px] text-red-400">
+                {playError}
+              </p>
             )}
           </div>
         )}
@@ -347,9 +360,14 @@ export default function MangaReaderRoute({
         <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center gap-3 bg-gray-900/80 px-4 py-3 md:hidden">
           <button
             onClick={isPlaying ? pause : play}
-            className="rounded-sm bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors duration-150 hover:bg-white/20"
+            className={`rounded-sm px-3 py-1.5 text-xs font-medium transition-colors duration-150 ${
+              isBuffering
+                ? "animate-pulse bg-white/5 text-white/40"
+                : "bg-white/10 text-white hover:bg-white/20"
+            }`}
+            disabled={isBuffering}
           >
-            {isPlaying ? "Pause" : "Play"}
+            {isBuffering ? "Loading..." : isPlaying ? "Pause" : "Play"}
           </button>
           <button
             onClick={toggleAutoMode}
@@ -369,6 +387,9 @@ export default function MangaReaderRoute({
               />
             </div>
           )}
+          {playError && (
+            <span className="text-[10px] text-red-400">{playError}</span>
+          )}
         </div>
       )}
     </div>
@@ -381,7 +402,7 @@ function PanelSlide({ panel }: { panel: PanelData }) {
   return (
     <div className="flex h-full items-center justify-center p-4">
       <img
-        src={panel.image_url}
+        src={panelImageUrl(panel)}
         alt={panel.transcript ?? `Panel ${panel.panel_order}`}
         className="max-h-full max-w-full object-contain"
         width={panel.image_width ?? undefined}

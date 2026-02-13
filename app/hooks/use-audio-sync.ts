@@ -12,6 +12,8 @@ interface UseAudioSyncOptions {
 interface UseAudioSyncReturn {
   audioRef: React.RefObject<HTMLAudioElement | null>;
   isPlaying: boolean;
+  isBuffering: boolean;
+  playError: string | null;
   isAutoMode: boolean;
   currentPanel: number;
   progress: number;
@@ -21,6 +23,8 @@ interface UseAudioSyncReturn {
   seekToPanel: (panel: number) => void;
 }
 
+const SEEK_DEBOUNCE_MS = 150;
+
 export function useAudioSync({
   audioUrl,
   anchors,
@@ -29,18 +33,72 @@ export function useAudioSync({
 }: UseAudioSyncOptions): UseAudioSyncReturn {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [playError, setPlayError] = useState<string | null>(null);
   const [isAutoMode, setIsAutoMode] = useState(false);
   const [currentPanel, setCurrentPanel] = useState(1);
   const [progress, setProgress] = useState(0);
+  const seekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Swipe-to-Seek: user swipes -> seek audio to panel start
+  // Buffering state: waiting/canplay/error events
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onWaiting = () => setIsBuffering(true);
+    const onCanPlay = () => setIsBuffering(false);
+    const onError = () => {
+      setIsBuffering(false);
+      const err = audio.error;
+      if (err) {
+        setPlayError(
+          err.code === MediaError.MEDIA_ERR_NETWORK
+            ? "Network error"
+            : err.code === MediaError.MEDIA_ERR_DECODE
+              ? "Audio decode error"
+              : err.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+                ? "Audio format not supported"
+                : "Audio error",
+        );
+      }
+      setIsPlaying(false);
+      setIsAutoMode(false);
+    };
+    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("error", onError);
+    return () => {
+      audio.removeEventListener("waiting", onWaiting);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("error", onError);
+    };
+  }, []);
+
+  // Debounced seek: only apply the last seek within SEEK_DEBOUNCE_MS
+  const debouncedSeek = useCallback(
+    (targetTime: number) => {
+      if (seekTimerRef.current) {
+        clearTimeout(seekTimerRef.current);
+      }
+      setIsBuffering(true);
+      seekTimerRef.current = setTimeout(() => {
+        const audio = audioRef.current;
+        if (audio) {
+          audio.currentTime = targetTime;
+        }
+        seekTimerRef.current = null;
+      }, SEEK_DEBOUNCE_MS);
+    },
+    [],
+  );
+
+  // Swipe-to-Seek: user swipes -> debounced seek audio to panel start
   const handleSlideChange = useCallback(
     (swiper: SwiperType) => {
       const panelNum = swiper.activeIndex + 1;
       const anchor = anchors.find((a) => a.panel === panelNum);
       if (!anchor || !audioRef.current) return;
 
-      audioRef.current.currentTime = anchor.start;
+      debouncedSeek(anchor.start);
       setCurrentPanel(panelNum);
 
       // Manual Override: disable auto-mode on manual swipe
@@ -50,7 +108,7 @@ export function useAudioSync({
 
       onPanelChange?.(panelNum);
     },
-    [anchors, isAutoMode, onPanelChange],
+    [anchors, isAutoMode, onPanelChange, debouncedSeek],
   );
 
   // Bind slideChange to Swiper
@@ -107,13 +165,34 @@ export function useAudioSync({
     };
   }, []);
 
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (seekTimerRef.current) {
+        clearTimeout(seekTimerRef.current);
+      }
+    };
+  }, []);
+
   const play = useCallback(() => {
     const audio = audioRef.current;
     if (!audio || !audioUrl) return;
     if (!audio.src) {
       audio.src = audioUrl;
     }
-    void audio.play();
+    setPlayError(null);
+    audio.play().catch((err: Error) => {
+      if (err.name === "AbortError") {
+        // Previous play was interrupted by a new seek/play — safe to ignore
+        return;
+      }
+      if (err.name === "NotAllowedError") {
+        setPlayError("Tap to enable audio playback");
+      } else {
+        setPlayError("Failed to play audio");
+      }
+      setIsPlaying(false);
+    });
     setIsPlaying(true);
   }, [audioUrl]);
 
@@ -144,6 +223,8 @@ export function useAudioSync({
   return {
     audioRef,
     isPlaying,
+    isBuffering,
+    playError,
     isAutoMode,
     currentPanel,
     progress,

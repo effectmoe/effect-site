@@ -85,7 +85,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const results = { clusters: 0, articles: 0, panels: 0 };
+  const results = { clusters: 0, articles: 0, panels: 0, rag_invalidated: 0 };
   const errors: string[] = [];
 
   // Upsert clusters
@@ -193,6 +193,24 @@ export async function action({ request, context }: Route.ActionArgs) {
       } catch (e) {
         errors.push(
           `panel ${p.id}: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
+  }
+
+  // Invalidate stale RAG chunks for synced articles
+  if (body.articles?.length) {
+    for (const a of body.articles) {
+      try {
+        const deleted = await env.DB.prepare(
+          "DELETE FROM article_chunks WHERE article_id = ?",
+        )
+          .bind(a.id)
+          .run();
+        results.rag_invalidated += deleted.meta.changes ?? 0;
+      } catch (e) {
+        errors.push(
+          `rag-invalidate ${a.id}: ${e instanceof Error ? e.message : String(e)}`,
         );
       }
     }

@@ -4,6 +4,7 @@ import {
   getArticleWithPanels,
   getClusterArticles,
 } from "~/lib/d1.server";
+import { panelImageUrl } from "~/lib/panel-image";
 import { cached } from "~/lib/cache.server";
 import { JsonLd } from "~/components/json-ld";
 import {
@@ -165,12 +166,12 @@ export default function ArticleTimeline({
           <div>
             {/* Cover panel as entry point */}
             <Link
-              to={`/articles/${article.slug}/p1`}
+              to={`/articles/${article.slug}/p/1`}
               prefetch="intent"
               className="group relative block overflow-hidden rounded-sm border border-gray-200"
             >
               <img
-                src={panels[0].image_url}
+                src={panelImageUrl(panels[0])}
                 alt={panels[0].transcript ?? article.title}
                 className="w-full transition-transform duration-200 ease-in-out group-hover:scale-[1.01]"
                 width={panels[0].image_width ?? undefined}
@@ -190,7 +191,7 @@ export default function ArticleTimeline({
                   Audio narration available
                 </span>
                 <Link
-                  to={`/articles/${article.slug}/p1`}
+                  to={`/articles/${article.slug}/p/1`}
                   className="ml-auto text-xs text-gray-900 underline underline-offset-2"
                 >
                   Listen while reading
@@ -208,12 +209,12 @@ export default function ArticleTimeline({
                   {panels.slice(0, 12).map((panel, i) => (
                     <Link
                       key={panel.id}
-                      to={`/articles/${article.slug}/p${panel.panel_order}`}
+                      to={`/articles/${article.slug}/p/${panel.panel_order}`}
                       prefetch="intent"
                       className="group relative aspect-[3/4] overflow-hidden rounded-sm border border-gray-100"
                     >
                       <img
-                        src={panel.image_url}
+                        src={panelImageUrl(panel)}
                         alt={panel.transcript ?? `Panel ${panel.panel_order}`}
                         loading="lazy"
                         className="h-full w-full object-cover"
@@ -225,7 +226,7 @@ export default function ArticleTimeline({
                   ))}
                   {panels.length > 12 && (
                     <Link
-                      to={`/articles/${article.slug}/p13`}
+                      to={`/articles/${article.slug}/p/13`}
                       className="flex aspect-[3/4] items-center justify-center rounded-sm border border-gray-200 bg-gray-50 text-xs text-gray-400"
                     >
                       +{panels.length - 12}
