@@ -15,7 +15,16 @@ export async function cached<T>(
   if (!kv) return fetcher();
 
   // Try KV cache first (includes metadata for soft TTL)
-  const { value, metadata } = await kv.getWithMetadata<T, { storedAt: number }>(key, "json");
+  let value: T | null = null;
+  let metadata: { storedAt: number } | null = null;
+  try {
+    const result = await kv.getWithMetadata<T, { storedAt: number }>(key, "json");
+    value = result.value;
+    metadata = result.metadata;
+  } catch {
+    // Corrupt cache entry - delete and treat as cache miss
+    await kv.delete(key);
+  }
 
   if (value !== null) {
     // Check soft TTL (5 min) - if expired, revalidate in background
