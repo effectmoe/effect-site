@@ -8,9 +8,11 @@ export function Header() {
           effect.moe
         </Link>
         <nav className="flex gap-6 text-sm text-gray-600">
-          <Link to="/" className="hover:text-gray-900">Home</Link>
-          <Link to="/articles" className="hover:text-gray-900">Articles</Link>
-          <Link to="/about" className="hover:text-gray-900">About</Link>
+          <Link to="/" className="hover:text-gray-900">ホーム</Link>
+          <Link to="/articles" className="hover:text-gray-900">記事一覧</Link>
+          <Link to="/knowledge" className="hover:text-gray-900">ナレッジ</Link>
+          <Link to="/glossary" className="hover:text-gray-900">用語集</Link>
+          <Link to="/about" className="hover:text-gray-900">サイト概要</Link>
         </nav>
       </div>
     </header>

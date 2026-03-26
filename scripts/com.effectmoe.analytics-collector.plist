@@ -24,5 +24,16 @@
     <string>/Users/tonychustudio/projects/effect-site/scripts/patrol-data/analytics-stderr.log</string>
     <key>WorkingDirectory</key>
     <string>/Users/tonychustudio/projects/effect-site</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/Users/tonychustudio/.nvm/versions/node/v22.9.0/bin</string>
+        <key>ADMIN_API_KEY</key>
+        <string>0d615c37fa58f208191921578486f83a846206de39a6f41926cbdc3719e7bd91</string>
+        <key>TELEGRAM_BOT_TOKEN</key>
+        <string>8226533383:AAGA0Tzo-tiEC_7j_MTnlaO2vNk0iq3xGg8</string>
+        <key>TELEGRAM_CHAT_ID</key>
+        <string>8588084195</string>
+    </dict>
 </dict>
 </plist>

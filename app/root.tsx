@@ -49,17 +49,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <html lang="ja">
+    <html lang="ja" className="overflow-x-hidden">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <Meta />
         <Links />
         <JsonLd data={generateSiteJsonLd(siteUrl)} />
       </head>
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col overflow-x-hidden">
         <Header />
-        <main className="mx-auto max-w-5xl flex-1 px-4 py-8">
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
           {children}
         </main>
         <Footer />

@@ -7,6 +7,19 @@ interface ArticleCardProps {
   isRead?: boolean;
 }
 
+/** Muted color palette per category. */
+const CATEGORY_STYLES: Record<string, string> = {
+  LLMO: "bg-violet-50 text-violet-400 border-violet-100",
+  DX: "bg-teal-50 text-teal-400 border-teal-100",
+  "AI・自動化": "bg-sky-50 text-sky-400 border-sky-100",
+  SEO: "bg-amber-50 text-amber-400 border-amber-100",
+};
+const DEFAULT_STYLE = "bg-stone-50 text-stone-400 border-stone-100";
+
+export function categoryBadgeClass(category: string): string {
+  return CATEGORY_STYLES[category] ?? DEFAULT_STYLE;
+}
+
 export function ArticleCard({
   article,
   seriesNumber,
@@ -18,7 +31,7 @@ export function ArticleCard({
       className="group block"
       prefetch="intent"
     >
-      <div className="relative aspect-[3/4] overflow-hidden rounded-sm border border-gray-200 bg-gray-50">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-sm border border-gray-200 bg-gray-50">
         {article.cover_image_url ? (
           <img
             src={article.cover_image_url}
@@ -55,7 +68,9 @@ export function ArticleCard({
           {article.title}
         </h3>
         {article.category && (
-          <span className="mt-0.5 block text-[11px] uppercase tracking-wide text-gray-400">
+          <span
+            className={`mt-1 inline-block rounded-full border px-2 py-0.5 text-[10px] font-medium tracking-wide ${categoryBadgeClass(article.category)}`}
+          >
             {article.category}
           </span>
         )}

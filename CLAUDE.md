@@ -111,6 +111,10 @@ Ollama (Mac Studio GPU)
 - JSON-LD、llms.txt、robots.txt で構造化情報を付加
 - X-AI-Context レスポンスヘッダーでメタ情報提供
 
+## マンガパイプライン
+
+**全ルール・禁止事項は `.claude/rules/manga-pipeline-rules.md` に記載。作業前に必ず読め。**
+
 ## コミットルール
 
 - ASCII-only（日本語・絵文字禁止）

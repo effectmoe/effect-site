@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router";
 import type { ChatMessage } from "~/types/chat";
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -24,7 +25,10 @@ function timestamp() {
 }
 
 export function ChatWidget() {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [showNudge, setShowNudge] = useState(false);
+  const hasShownNudgeRef = useRef(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -41,6 +45,30 @@ export function ChatWidget() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Scroll-triggered nudge: show once when user scrolls past 50%
+  useEffect(() => {
+    if (hasShownNudgeRef.current) return;
+
+    const handleScroll = () => {
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight <= 0) return;
+      const scrollPercent = window.scrollY / docHeight;
+      if (scrollPercent > 0.5 && !hasShownNudgeRef.current) {
+        hasShownNudgeRef.current = true;
+        setShowNudge(true);
+        setTimeout(() => setShowNudge(false), 5000);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Hide global chat widget when manga reader is open
+  if (/^\/articles\/[^/]+\/p\/\d+/.test(location.pathname)) {
+    return null;
+  }
 
   async function sendMessage(text: string) {
     if (!text.trim() || isLoading) return;
@@ -104,32 +132,67 @@ export function ChatWidget() {
 
   if (!isOpen) {
     return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-blue-700"
-        aria-label="Open chat"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+      <>
+        {/* Scroll-triggered nudge banner */}
+        {showNudge && (
+          <div className="fixed bottom-24 right-6 z-50 flex max-w-[280px] animate-[slideUp_0.3s_ease-out] items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-xl">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">
+                この記事について質問がありますか？
+              </p>
+              <p className="mt-0.5 text-xs text-gray-500">
+                AIがお答えします
+              </p>
+              <button
+                onClick={() => {
+                  setIsOpen(true);
+                  setShowNudge(false);
+                }}
+                className="mt-2 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+              >
+                質問する
+              </button>
+            </div>
+            <button
+              onClick={() => setShowNudge(false)}
+              className="shrink-0 text-gray-400 hover:text-gray-600"
+              aria-label="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* FAB button */}
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-blue-700"
+          aria-label="Open chat"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+        </button>
+      </>
     );
   }
 
   return (
     <div
-      className="fixed bottom-6 right-6 z-50 flex w-[380px] flex-col rounded-2xl border border-gray-200 bg-white shadow-2xl"
+      className="fixed bottom-0 right-0 left-0 z-50 flex flex-col rounded-t-2xl border border-gray-200 bg-white shadow-2xl sm:bottom-6 sm:right-6 sm:left-auto sm:w-[380px] sm:rounded-2xl"
       style={{ height: "520px" }}
     >
       {/* Header */}

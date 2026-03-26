@@ -32,6 +32,8 @@ export async function loader({ context }: Route.LoaderArgs) {
     "",
     "# AI-readable site summary",
     `# See: ${siteUrl}/llms.txt`,
+    `# Full version with FAQ & glossary: ${siteUrl}/llms-full.txt`,
+    `# Structured data (Schema.org): ${siteUrl}/api/structured-data`,
   ].join("\n");
 
   return new Response(content, {

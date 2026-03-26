@@ -9,6 +9,27 @@
 import type { Route } from "./+types/api.sync.content";
 import { authenticateRequest } from "~/lib/auth.server";
 
+const CHUNK_SIZE = 500;
+const CHUNK_OVERLAP = 50;
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function chunkText(text: string, size = CHUNK_SIZE, overlap = CHUNK_OVERLAP): string[] {
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < text.length) {
+    const end = Math.min(start + size, text.length);
+    const chunk = text.slice(start, end).trim();
+    if (chunk.length > 20) {
+      chunks.push(chunk);
+    }
+    start += size - overlap;
+  }
+  return chunks;
+}
+
 // --- Sync payload types ---
 
 interface SyncCluster {
@@ -85,7 +106,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const results = { clusters: 0, articles: 0, panels: 0, rag_invalidated: 0 };
+  const results = { clusters: 0, articles: 0, panels: 0, rag_invalidated: 0, rag_indexed: 0 };
   const errors: string[] = [];
 
   // Upsert clusters
@@ -211,6 +232,61 @@ export async function action({ request, context }: Route.ActionArgs) {
       } catch (e) {
         errors.push(
           `rag-invalidate ${a.id}: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
+  }
+
+  // Auto-index global_llm_text + panel transcripts into article_chunks for RAG
+  if (body.articles?.length && env.AI) {
+    for (const a of body.articles) {
+      if (!a.global_llm_text) continue;
+
+      try {
+        const plainText = stripHtml(a.global_llm_text);
+        if (plainText.length < 50) continue;
+
+        // Collect panel transcripts for this article (if in same sync payload)
+        const panelTranscripts = (body.panels ?? [])
+          .filter((p) => p.article_id === a.id && p.transcript)
+          .sort((x, y) => x.panel_order - y.panel_order)
+          .map((p) => `${p.panel_order}ページ: ${p.transcript}`)
+          .join("\n");
+
+        const fullText = [
+          a.title,
+          a.description || "",
+          plainText,
+          panelTranscripts ? `\n--- パネル書き起こし ---\n${panelTranscripts}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        const chunks = chunkText(fullText);
+        if (chunks.length === 0) continue;
+
+        // Batch embed all chunks at once
+        const embResult = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
+          text: chunks,
+        });
+
+        if (!embResult?.data) continue;
+
+        for (let i = 0; i < chunks.length; i++) {
+          const embedding = (embResult.data as number[][])[i];
+          if (!embedding) continue;
+
+          await env.DB.prepare(
+            "INSERT OR REPLACE INTO article_chunks (article_id, article_title, article_slug, chunk_index, chunk_text, embedding) VALUES (?, ?, ?, ?, ?, ?)",
+          )
+            .bind(a.id, a.title, a.slug, i, chunks[i], JSON.stringify(embedding))
+            .run();
+
+          results.rag_indexed++;
+        }
+      } catch (e) {
+        errors.push(
+          `rag-index ${a.id}: ${e instanceof Error ? e.message : String(e)}`,
         );
       }
     }
