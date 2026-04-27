@@ -1,0 +1,65 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import { t } from '@/lib/utils';
+
+interface Props {
+  blog: CollectionEntry<'blogs'>;
+}
+
+const { blog } = Astro.props;
+
+const formattedDate = new Date(blog.data.pubDate).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<div class="flex w-full flex-col gap-6 lg:flex-row">
+  <div class="flex w-full flex-col gap-0.5 space-y-6 lg:w-1/2">
+    <div class="space-y-3 md:space-y-5">
+      <div>
+        <MarqueeText text="Article" />
+      </div>
+      <h1 class="font-clash text-4xl md:text-6xl lg:text-7xl">
+        {blog.data.title}
+      </h1>
+    </div>
+
+    <div class="mt-6 flex flex-wrap gap-2">
+      {
+        blog.data.topics.map((topic) => (
+          <span class="text-primary-foreground bg-primary px-3 py-2 font-mono text-xs tracking-widest uppercase">
+            {topic}
+          </span>
+        ))
+      }
+    </div>
+
+    <div class="bg-muted-foreground/30 grid grid-cols-1 gap-0.5 p-0.5 lg:grid-cols-3">
+      <div class="bg-primary-foreground flex flex-col justify-center p-4 md:p-6">
+        <p class="text-muted mb-2 font-mono text-sm uppercase">{t('blog.slug.header.author')}</p>
+        <p class="text-base tracking-wide uppercase">{blog.data.author}</p>
+      </div>
+      <div class="bg-primary-foreground flex flex-col justify-center p-4 md:p-6">
+        <p class="text-muted mb-2 font-mono text-sm uppercase">{t('blog.slug.header.date')}</p>
+        <p class="text-base tracking-wide uppercase">{formattedDate}</p>
+      </div>
+      <div class="bg-primary-foreground flex flex-col justify-center p-4 md:p-6">
+        <p class="text-muted mb-2 font-mono text-sm uppercase">{t('blog.slug.header.readingTime')}</p>
+        <p class="text-base tracking-wide uppercase">{blog.data.readingTime}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="relative flex min-h-[400px] w-full lg:w-1/2">
+    <Image
+      src={blog.data.heroImage}
+      alt={blog.data.title}
+      class="absolute inset-0 h-full w-full rounded-md object-cover"
+      loading="eager"
+    />
+  </div>
+</div>

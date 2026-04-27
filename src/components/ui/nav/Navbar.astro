@@ -1,0 +1,56 @@
+---
+import { Icon } from 'astro-icon/components';
+import Button from '@/components/ui/Button.astro';
+import FullscreenMenu from './FullscreenMenu.astro';
+import { navItems } from '@/config/navItems.data';
+
+const currentPath = Astro.url.pathname;
+---
+
+<nav class="bg-background/90 fixed top-0 right-0 left-0 z-40 border-b border-dashed border-black/10 backdrop-blur-sm">
+  <div class="flex items-center justify-between px-4 py-3 md:px-12 lg:py-5">
+    <!-- Logo -->
+    <a href="/" class="font-clash z-10 flex items-center text-xl md:text-2xl lg:text-4xl">EFFECT</a>
+
+    <!-- Right Side Buttons -->
+    <div class="flex items-center gap-4">
+      {
+        navItems.map((item) => {
+          const isActive = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href));
+          return (
+            <Button
+              variant={isActive ? 'secondary' : 'primary'}
+              href={item.href}
+              size="sm"
+              class="hidden lg:inline-flex"
+            >
+              {item.title}
+            </Button>
+          );
+        })
+      }
+
+      <!-- Mobile Menu Button -->
+      <Button id="menu-toggle" variant="ghost" aria-label="Toggle menu" size="icon" class="lg:hidden">
+        <Icon name="menu" class="h-6 w-6" />
+      </Button>
+    </div>
+  </div>
+</nav>
+
+<!-- Fullscreen Menu (mobile only) -->
+<FullscreenMenu />
+
+<script>
+  const menuToggle = document.getElementById('menu-toggle');
+  let isMenuOpen = false;
+
+  menuToggle?.addEventListener('click', () => {
+    isMenuOpen = !isMenuOpen;
+    window.dispatchEvent(new CustomEvent('toggleMenu', { detail: { isOpen: isMenuOpen } }));
+  });
+
+  window.addEventListener('closeMenu', () => {
+    isMenuOpen = false;
+  });
+</script>

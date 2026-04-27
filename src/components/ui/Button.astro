@@ -1,0 +1,47 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+
+const buttonVariants = cva(
+  'uppercase inline-flex items-center rounded-lg justify-center gap-2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-50 transition-colors duration-300 font-grotesk',
+  {
+    variants: {
+      variant: {
+        primary:
+          'bg-primary text-primary-foreground hover:bg-primary-foreground hover:text-foreground border border-primary',
+        secondary:
+          'bg-primary-foreground text-primary hover:bg-primary hover:text-primary-foreground border border-primary',
+        outline: 'bg-transparent border border-primary text-foreground hover:bg-primary hover:text-primary-foreground',
+        ghost: 'bg-transparent text-foreground hover:bg-primary hover:text-primary-foreground',
+        none: 'bg-transparent',
+      },
+      size: {
+        none: 'px-0 py-2',
+        sm: 'px-6 py-2 text-xs md:text-sm',
+        md: 'px-8 py-2.5 text-sm md:text-base',
+        lg: 'px-10 py-3 text-base md:text-lg',
+        xl: 'px-12 py-4 text-lg md:text-xl',
+        icon: 'p-2 in-data-[slot=button-group]:text-foreground',
+      },
+    },
+    defaultVariants: {
+      variant: 'primary',
+      size: 'md',
+    },
+  },
+);
+
+interface Props
+  extends HTMLAttributes<'button'>, Omit<HTMLAttributes<'a'>, 'type'>, VariantProps<typeof buttonVariants> {
+  href?: string;
+}
+
+const { variant, size, class: className, href, ...rest } = Astro.props;
+
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag class={cn(buttonVariants({ variant, size }), className)} href={href} {...rest}>
+  <slot />
+</Tag>

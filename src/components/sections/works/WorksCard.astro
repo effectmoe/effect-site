@@ -1,0 +1,57 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { CollectionEntry } from 'astro:content';
+import Button from '@/components/ui/Button.astro';
+import { t } from '@/lib/utils';
+import { Image } from 'astro:assets';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+---
+
+<div
+  class="group bg-muted-foreground/30 mx-auto grid min-h-[500px] max-w-5xl grid-cols-1 gap-0.5 overflow-hidden p-0.5 xl:grid-cols-[2fr_3fr]"
+>
+  {/* Content Container */}
+  <div class="bg-primary-foreground flex h-full flex-col justify-between space-y-6 p-6 md:p-6">
+    <h3 class="text-2xl font-bold md:text-3xl">{project.data.title}</h3>
+
+    <div class="space-y-6">
+      <div class="space-y-4 text-base">
+        <div class="flex flex-col">
+          <span class="text-muted uppercase">{t('project.card.year')}</span>
+          <span class="text-light">{project.data.date.getUTCFullYear()}</span>
+        </div>
+
+        <div class="flex flex-col">
+          <span class="text-muted uppercase">{t('project.card.category')}</span>
+          <span class="text-light">{project.data.tags[0]}</span>
+        </div>
+      </div>
+
+      <Button href={`/works/${project.id}`} size="sm" variant="primary">{t('project.card.btn')}</Button>
+    </div>
+  </div>
+
+  {/* Image Container */}
+  <a href={`/works/${project.id}`} class="relative h-full overflow-hidden">
+    <div class="h-full w-full overflow-hidden">
+      <Image
+        src={project.data.coverImage}
+        alt={project.data.title}
+        class="aspect-video h-full w-full object-cover transition-all duration-700 ease-in-out group-hover:scale-110 group-hover:blur-sm"
+        loading="lazy"
+      />
+    </div>
+
+    {/* Overlay Icon */}
+    <div
+      class="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+    >
+      <Icon name={`logo-brands/${project.data.icon}`} class="h-16 w-16" />
+    </div>
+  </a>
+</div>

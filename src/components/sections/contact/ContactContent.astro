@@ -1,0 +1,107 @@
+---
+import { t } from '@/lib/utils';
+import ContactForm from './ContactForm.astro';
+import ContactInfo from './ContactInfo.astro';
+import MarqueeText from '@/components/common/MarqueeText.astro';
+---
+
+<section
+  id="contact-top"
+  data-contact="section"
+  class="container mx-auto space-y-6 px-4 pt-24 pb-20 md:space-y-12 lg:pt-36 lg:pb-28"
+>
+  <div class="mb-12 space-y-3 text-center md:mb-16 md:space-y-5">
+    <div data-contact="marquee">
+      <MarqueeText text={t('contact.marqueetext')} />
+    </div>
+    <h1 data-contact="title" class="font-clash text-4xl md:text-7xl lg:text-8xl">
+      {t('contact.title')}
+    </h1>
+    <p data-contact="desc" class="mx-auto max-w-4xl text-lg leading-relaxed whitespace-pre-line md:text-2xl">
+      {t('contact.description')}
+    </p>
+  </div>
+
+  <div data-contact="hero" class="grid grid-cols-1 xl:grid-cols-2">
+    <div data-contact="form">
+      <ContactForm />
+    </div>
+    <div data-contact="info" class="mt-16 xl:mt-0 xl:flex xl:items-start xl:justify-end">
+      <ContactInfo />
+    </div>
+  </div>
+</section>
+
+<style>
+  [data-contact='section'] [data-contact='marquee'],
+  [data-contact='section'] [data-contact='title'],
+  [data-contact='section'] [data-contact='desc'],
+  [data-contact='section'] [data-contact='form'],
+  [data-contact='section'] [data-contact='info'] {
+    visibility: hidden;
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  function initAnimations() {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const section = document.querySelector('[data-contact="section"]');
+    if (!section) return;
+
+    const q = (attr: string) => section.querySelector(`[data-contact="${attr}"]`);
+
+    if (prefersReducedMotion) {
+      gsap.set([q('marquee'), q('title'), q('desc'), q('form'), q('info')], {
+        visibility: 'visible',
+        opacity: 1,
+      });
+      return;
+    }
+
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+    tl.fromTo(
+      q('marquee'),
+      { y: 20, opacity: 0, visibility: 'hidden' },
+      { y: 0, opacity: 1, visibility: 'visible', duration: 0.5, ease: 'power2.out' },
+    )
+      .fromTo(
+        q('title'),
+        { y: 50, opacity: 0, visibility: 'hidden' },
+        { y: 0, opacity: 1, visibility: 'visible', duration: 0.9, ease: 'power3.out' },
+        '-=0.2',
+      )
+      .fromTo(
+        q('desc'),
+        { y: 25, opacity: 0, visibility: 'hidden' },
+        { y: 0, opacity: 1, visibility: 'visible', duration: 0.6, ease: 'power2.out' },
+        '-=0.5',
+      )
+      .fromTo(
+        q('form'),
+        { y: 30, opacity: 0, visibility: 'hidden' },
+        { y: 0, opacity: 1, visibility: 'visible', duration: 0.7 },
+        '-=0.2',
+      )
+      .fromTo(
+        q('info'),
+        { y: 30, opacity: 0, visibility: 'hidden' },
+        { y: 0, opacity: 1, visibility: 'visible', duration: 0.7 },
+        '-=0.35',
+      );
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAnimations);
+  } else {
+    initAnimations();
+  }
+
+  document.addEventListener('astro:page-load', initAnimations);
+</script>

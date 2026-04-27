@@ -1,0 +1,54 @@
+---
+import { process } from '@/config/process.data';
+import { Image } from 'astro:assets';
+---
+
+<div data-process-mobile="cards" class="bg-muted-foreground/30 grid grid-cols-1 gap-0.5 p-0.5 lg:hidden">
+  {
+    process.map((step, i) => (
+      <div class="process-mobile-card bg-muted-foreground/30 flex h-full w-full flex-col gap-0.5">
+        <div class="bg-primary-foreground relative aspect-video w-full overflow-hidden">
+          <Image src={step.image} alt={step.title} class="h-full w-full object-cover" />
+        </div>
+
+        <div class="bg-primary-foreground flex flex-1 flex-col space-y-16 p-6">
+          <span class="text-muted font-mono text-3xl">{step.num}</span>
+          <div class="flex flex-col gap-3">
+            <h3 class="max-w-[200px] text-2xl font-semibold">{step.title}</h3>
+            <p class="font-mono text-base">{step.description}</p>
+          </div>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const initMobileCards = () => {
+    const section = document.querySelector('[data-process-mobile="cards"]');
+    if (section) {
+      const cards = section.querySelectorAll('.process-mobile-card');
+      gsap.set(cards, { opacity: 0, y: 30 });
+
+      gsap.to(cards, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'power3.out',
+        stagger: 0.12,
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 80%',
+          once: true,
+        },
+      });
+    }
+  };
+
+  initMobileCards();
+</script>

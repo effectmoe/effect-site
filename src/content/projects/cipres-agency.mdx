@@ -1,0 +1,96 @@
+---
+title: "Cipres Agency"
+tags: ["Web Design", "Web Development", "UI/UX"]
+description: "A clean, modern web agency template built with Astro and React — structured around showcasing expertise, building trust, and turning portfolio visitors into serious inquiries."
+coverImage: "../../assets/works/cipres-agency/cipres-agency-01.webp"
+client: "Cipres Agency"
+date: 2025-12-14
+featured: true
+clientLink: "https://cuterdev.lemonsqueezy.com/"
+icon: "cipres-agency-logo"
+---
+import { Image } from 'astro:assets';
+import cipres02 from "../../assets/works/cipres-agency/cipres-agency-02.webp"
+import cipres03 from "../../assets/works/cipres-agency/cipres-agency-03.webp"
+
+## The Challenge
+
+Web agencies have a specific credibility problem: prospects arrive already skeptical. They've seen dozens of agency sites that all promise the same things — fast delivery, great results, dedicated teams. The challenge with Cipres Agency wasn't just making something that looked good. It was building a template that felt trustworthy from the first scroll, communicated expertise clearly, and made it easy for a potential client to say "yes, these people know what they're doing."
+
+That meant rethinking the structure from the ground up. Instead of a Studio page, the template needed a proper About page — one that could carry a mission statement, showcase expertise areas, and introduce the team in a way that felt human, not corporate.
+
+---
+
+## Design Process
+
+Cipres Agency was designed around a single question: **what does a serious web agency actually need to convert a visitor into a client?**
+
+The answer shaped everything:
+
+- A homepage that moves the visitor through a complete story — hero, services, featured work, process, social proof, CTA — without a single wasted section
+- An About page built around credibility: mission first, expertise areas second, team third
+- A Projects page with category filtering so prospects can find work relevant to their industry quickly
+- A work process timeline on the homepage so agencies can show exactly how they operate before the client even asks
+- A contact page with a proper FAQ section to handle objections before they become reasons not to reach out
+
+The typography leans clean and professional — no display fonts competing for attention, just clear hierarchy and solid spacing that lets the work speak for itself.
+
+<div class="project-images">
+  <Image src={cipres02} alt="Cipres Agency - Hero section" />
+  <Image src={cipres03} alt="Cipres Agency - Hero section" />
+</div>
+---
+
+## Technical Decisions
+
+Cipres Agency was built with a deliberate focus on maintainability and clarity — a template that a developer could hand off to a client without a long onboarding call:
+
+| Tool | Why |
+|---|---|
+| **Astro 5** | Static-first with SSR, outstanding performance out of the box |
+| **React 19** | Interactive components hydrated only where needed |
+| **GSAP + Lenis** | Smooth scroll-triggered animations without layout jank |
+| **Tailwind CSS v4** | Rapid, consistent styling with a clean design system |
+| **Lucide Icons** | Consistent, lightweight icon system across Astro and React |
+| **Zod + Resend** | Type-safe contact form with production-ready email delivery |
+
+Switching from Iconify to Lucide Icons was a deliberate call — having the same icon library available in both `.astro` and `.tsx` files without adapters or wrappers keeps the codebase simpler and more predictable. The project schema also got a meaningful upgrade: each project now tracks a `timeline` field and a `category`, giving the portfolio grid more structure and making it easier to filter and present work contextually.
+
+---
+
+## The Result
+
+Cipres Agency ships as a complete, conversion-focused web agency template:
+
+- Four core pages — Home, About, Projects, Contact
+- Work process timeline on the homepage
+- About page with mission, expertise areas, and team grid
+- Projects with category filtering — Agency, Branding, Portfolio, Other
+- Individual project pages with timeline and year fields
+- Client testimonials section
+- FAQ section with accessible accordion
+- Fullscreen navigation menu
+- Automatic sitemap and full SEO meta tags
+- Legal pages — Terms and Privacy Policy
+
+The combination of the work process timeline and the categorized project grid makes Cipres Agency particularly strong for agencies that want to show not just what they've built, but how they build it.
+
+---
+
+## Lessons Learned
+
+Designing around conversion rather than aesthetics pushed me to make harder editorial decisions. It's easy to add sections — it's much harder to cut them. Early versions of the homepage had more visual variety but less narrative clarity. Stripping it back to only what moved the visitor toward a decision made the whole thing stronger.
+
+> **Structure is a sales tool.** The order of sections on the homepage isn't a layout decision — it's a persuasion sequence. Hero sets the context, services establish relevance, projects build credibility, process reduces risk, testimonials provide social proof, and CTA closes. Every section earns its place.
+
+The category system for projects also required more upfront thinking than expected. Defining a fixed enum (`Agency`, `Branding`, `Portfolio`, `Other`) keeps the filtering logic clean but means buyers need to think carefully about how they categorize their work from day one.
+
+---
+
+## What I'd Do Differently
+
+A few things I'd revisit with fresh eyes:
+
+- **More category options** — four categories work for most agencies, but a freelancer or multidisciplinary studio might need `Motion`, `Print`, or `Strategy` as options without touching the schema.
+- **A dedicated Services page** — the homepage services section works well for general positioning, but a full services page with individual detail layouts would make Cipres stronger for agencies that need to sell specific offerings at depth.
+- **Project timeline visualization** — the `timeline` field currently renders as plain text. A small visual indicator — a bar, a tag — would make it more scannable and add personality to the project detail pages.

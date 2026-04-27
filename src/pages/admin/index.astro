@@ -1,0 +1,412 @@
+---
+// effect.moe Analytics Dashboard
+// 保護: Cloudflare Access (effect.moe/admin/*)
+---
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EFFECT — Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Acacia Studio デザイントークン */
+    :root {
+      --bg:      #eeebe4;
+      --fg:      #0a0a0a;
+      --surface: #1a1a1a;
+      --accent:  #c2410c;
+      --muted:   #6b7280;
+      --border:  rgba(0,0,0,0.08);
+      --radius:  12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Space Grotesk", "Zen Kaku Gothic New", sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      background: var(--fg);
+      color: #fff;
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px dashed rgba(255,255,255,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .logo {
+      font-family: "Clash Display", serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .logo span { color: var(--accent); }
+    header p {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+      font-family: "Roboto Mono", monospace;
+    }
+
+    /* Layout */
+    .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.25rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 0;
+    }
+    .tab {
+      padding: 0.6rem 1.25rem;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all .15s;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-family: "Roboto Mono", monospace;
+    }
+    .tab.active {
+      color: var(--fg);
+      border-bottom-color: var(--accent);
+    }
+    .tab:hover { color: var(--fg); }
+
+    /* Panel */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .kpi {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    .kpi-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+      font-family: "Roboto Mono", monospace;
+    }
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--fg);
+      font-family: "Clash Display", serif;
+    }
+    .kpi-sub { font-size: 0.72rem; color: var(--muted); margin-top: 0.25rem; }
+
+    /* Chart Grid */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .chart-card {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    .chart-card.full { grid-column: 1 / -1; }
+    .chart-card h3 {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+      font-family: "Roboto Mono", monospace;
+    }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    th {
+      padding: 0.6rem 1rem;
+      text-align: left;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px dashed var(--border);
+      font-family: "Roboto Mono", monospace;
+    }
+    td { padding: 0.65rem 1rem; border-bottom: 1px dashed var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .badge-gpt    { background: #d1fae5; color: #065f46; }
+    .badge-claude { background: #ede9fe; color: #5b21b6; }
+    .badge-google { background: #dbeafe; color: #1e40af; }
+    .badge-other  { background: #f3f4f6; color: #374151; }
+
+    /* Info card */
+    .info-card {
+      background: var(--surface);
+      color: rgba(255,255,255,0.85);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+    .info-card h3 {
+      color: rgba(255,255,255,0.5);
+      border-bottom-color: rgba(255,255,255,0.1);
+    }
+    .info-card p { color: rgba(255,255,255,0.6); font-size: 0.88rem; line-height: 1.7; }
+    .info-card code {
+      background: rgba(255,255,255,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "Roboto Mono", monospace;
+      font-size: 0.82em;
+    }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+    .tag {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-family: "Roboto Mono", monospace;
+    }
+
+    .btn-outline {
+      display: inline-block;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      transition: all .15s;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.08); }
+
+    .loading { padding: 2.5rem; text-align: center; color: var(--muted); font-size: 0.84rem; }
+    .empty { padding: 2.5rem; text-align: center; color: var(--muted); font-size: 0.84rem; }
+
+    @media (max-width: 768px) {
+      .chart-grid { grid-template-columns: 1fr; }
+      .container { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">EFFECT<span>.</span></div>
+    <p id="last-updated"></p>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="crawlers">AI CRAWLERS</button>
+      <button class="tab" data-tab="ga4">ANALYTICS</button>
+      <button class="tab" data-tab="site">SITE SEARCH</button>
+      <button class="tab" data-tab="clarity">CLARITY</button>
+    </div>
+
+    <!-- AI Crawler -->
+    <div class="panel active" id="panel-crawlers">
+      <div class="kpi-grid" id="crawler-kpis">
+        <div class="loading">Loading...</div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Crawler Distribution</h3>
+          <canvas id="chart-crawler-pie" height="220"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Top Pages</h3>
+          <canvas id="chart-crawler-pages" height="220"></canvas>
+        </div>
+        <div class="chart-card full">
+          <h3>Recent Access Log</h3>
+          <div id="crawler-log-table"><div class="loading">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GA4 -->
+    <div class="panel" id="panel-ga4">
+      <div class="chart-grid">
+        <div class="chart-card info-card full">
+          <h3>Google Analytics 4</h3>
+          <p>
+            MCP サーバー <code>google-analytics</code> が設定済みです。<br>
+            Hermes または Claude Code から <code>「effect.moe の GA4 データを分析して」</code> と依頼することで、ページビュー・セッション・流入元などを分析できます。
+          </p>
+          <div class="tag-list">
+            <span class="tag">Property: 534858802</span>
+            <span class="tag">Measurement: G-571MN39B7X</span>
+            <span class="tag">runReport</span>
+            <span class="tag">getTopPages</span>
+            <span class="tag">getTrafficSources</span>
+            <span class="tag">getRealtime</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Site Search -->
+    <div class="panel" id="panel-site">
+      <div class="kpi-grid" id="search-kpis">
+        <div class="loading">Loading...</div>
+      </div>
+      <div class="chart-card full">
+        <h3>Search Query Log</h3>
+        <p class="empty" style="text-align:left;padding:0">
+          D1 <code>interaction_logs</code> にクエリが蓄積されます。<br>
+          <code>python3 ~/brain/scripts/feedback_analyzer.py</code> で分析・記事提案が実行されます。
+        </p>
+      </div>
+    </div>
+
+    <!-- Clarity -->
+    <div class="panel" id="panel-clarity">
+      <div class="chart-grid">
+        <div class="chart-card info-card">
+          <h3>Heatmaps & Recordings</h3>
+          <p>Clarity のヒートマップとセッション録画は公式ダッシュボードで確認してください。</p>
+          <a href="https://clarity.microsoft.com" target="_blank" class="btn-outline">Open Clarity Dashboard →</a>
+        </div>
+        <div class="chart-card info-card">
+          <h3>MCP Integration</h3>
+          <p>
+            MCP サーバー <code>microsoft-clarity</code> が設定済みです。<br>
+            Hermes から <code>「Clarity データを分析して」</code> と依頼できます。
+          </p>
+          <div class="tag-list">
+            <span class="tag">getSessions</span>
+            <span class="tag">getPageMetrics</span>
+            <span class="tag">getUserBehavior</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + name).classList.add('active');
+      });
+    });
+
+    document.getElementById('last-updated').textContent =
+      new Date().toLocaleString('ja-JP', { dateStyle: 'short', timeStyle: 'short' });
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Crawler data
+    async function loadCrawlers() {
+      try {
+        const res  = await fetch(`/api/crawler-stats?date=${today}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        const byCrawler = data.by_crawler || {};
+        const total     = data.total || 0;
+
+        document.getElementById('crawler-kpis').innerHTML = `
+          <div class="kpi"><div class="kpi-label">Today's Crawls</div><div class="kpi-value">${total}</div><div class="kpi-sub">${today}</div></div>
+          ${Object.entries(byCrawler).slice(0, 4).map(([name, d]) =>
+            `<div class="kpi"><div class="kpi-label">${name}</div><div class="kpi-value">${d.count}</div></div>`
+          ).join('')}
+        `;
+
+        const labels = Object.keys(byCrawler);
+        const counts = labels.map(k => byCrawler[k].count);
+        new Chart(document.getElementById('chart-crawler-pie'), {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data: counts, backgroundColor: ['#c2410c','#1d4ed8','#065f46','#7c3aed','#374151'] }] },
+          options: { plugins: { legend: { position: 'right', labels: { font: { family: 'Roboto Mono', size: 11 } } } } }
+        });
+
+        const pathCounts = {};
+        (data.recent || []).forEach(r => { pathCounts[r.path] = (pathCounts[r.path] || 0) + 1; });
+        const topPaths = Object.entries(pathCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+        new Chart(document.getElementById('chart-crawler-pages'), {
+          type: 'bar',
+          data: { labels: topPaths.map(([p]) => p), datasets: [{ label: 'Visits', data: topPaths.map(([, c]) => c), backgroundColor: '#0a0a0a' }] },
+          options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
+        });
+
+        const recent = (data.recent || []).slice(0, 15);
+        document.getElementById('crawler-log-table').innerHTML = recent.length
+          ? `<table>
+              <tr><th>Time</th><th>Crawler</th><th>Path</th><th>Status</th></tr>
+              ${recent.map(r => {
+                const cls = r.crawler.includes('GPT') ? 'badge-gpt' : r.crawler.includes('Claude') ? 'badge-claude' : r.crawler.includes('Google') ? 'badge-google' : 'badge-other';
+                return `<tr>
+                  <td style="font-family:monospace;font-size:.78rem">${new Date(r.timestamp).toLocaleTimeString('ja-JP')}</td>
+                  <td><span class="badge ${cls}">${r.crawler}</span></td>
+                  <td style="font-size:.82rem">${r.path}</td>
+                  <td style="font-size:.78rem;color:var(--muted)">${r.statusCode || '—'}</td>
+                </tr>`;
+              }).join('')}
+            </table>`
+          : '<div class="empty">No crawler visits today — data will appear when AI crawlers access the site.</div>';
+
+      } catch (e) {
+        document.getElementById('crawler-kpis').innerHTML = `<div class="loading">No data yet for today.</div>`;
+        document.getElementById('crawler-log-table').innerHTML = `<div class="empty">${e.message}</div>`;
+      }
+    }
+
+    // Site articles count
+    async function loadSiteData() {
+      try {
+        const res  = await fetch('/api/articles');
+        const data = await res.json();
+        document.getElementById('search-kpis').innerHTML = `
+          <div class="kpi"><div class="kpi-label">Published Articles</div><div class="kpi-value">${data.count || 0}</div></div>
+        `;
+      } catch {
+        document.getElementById('search-kpis').innerHTML = `<div class="kpi"><div class="kpi-label">Articles</div><div class="kpi-value">—</div></div>`;
+      }
+    }
+
+    loadCrawlers();
+    loadSiteData();
+  </script>
+</body>
+</html>

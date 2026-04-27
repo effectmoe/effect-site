@@ -1,0 +1,43 @@
+.input {
+  @apply text-base md:text-lg w-full border-2 border-muted-foreground/80 bg-primary-foreground px-4 md:px-5 py-3 md:py-3.5 font-bold outline-none transition-all duration-300;
+}
+
+.input:focus {
+  @apply border-accent;
+}
+
+.input.input-error {
+  @apply border-red-500;
+}
+
+.input::placeholder {
+  @apply uppercase tracking-wider text-xs md:text-sm;
+}
+
+.label {
+  @apply font-mono font-semibold block text-xs md:text-sm tracking-widest uppercase;
+}
+
+.label.label-error {
+  @apply text-red-600;
+}
+
+.text-area {
+  @apply w-full resize-none border-2 border-muted-foreground/80 bg-primary-foreground px-4 md:px-5 py-3 md:py-3.5 text-base md:text-lg font-bold outline-none transition-all duration-300;
+}
+
+.text-area:focus {
+  @apply border-accent;
+}
+
+.text-area.input-error {
+  @apply border-red-500;
+}
+
+.text-area::placeholder {
+  @apply uppercase tracking-wider text-xs md:text-sm;
+}
+
+.field-error {
+  @apply flex items-center gap-1.5 text-sm font-semibold text-red-600 mt-1;
+}

@@ -1,0 +1,233 @@
+---
+import Button from '@/components/ui/Button.astro';
+import { t } from '@/lib/utils';
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  projects: CollectionEntry<'projects'>[];
+}
+
+const { projects } = Astro.props;
+---
+
+<section id="project-showcase" class="relative" style={`height: calc(100vh + ${projects.length * 60}vh)`}>
+  <div class="pointer-events-none sticky top-28 z-10 flex items-start justify-center">
+    <div
+      id="showcase-card"
+      class="bg-muted-foreground/30 pointer-events-auto grid h-[min(740px,80vh)] w-full grid-cols-[380px_1fr] gap-0.5 overflow-hidden p-0.5 xl:grid-cols-[560px_1fr]"
+    >
+      <!-- ── LEFT PANEL ── -->
+      <div class="bg-primary-foreground relative flex flex-col overflow-hidden p-5">
+        <div class="flex flex-col justify-between gap-3 xl:flex-row">
+          <ul class="order-2 m-0 flex list-none flex-col gap-1 p-0 xl:order-1">
+            {
+              projects.map((project, i) => (
+                <li class="showcase-nav-item flex items-center gap-3" data-index={i}>
+                  <span class="nav-bar block h-1 w-[4px] shrink-0 rounded-full bg-transparent transition-[width,background] duration-200 ease-in-out" />
+                  <span class="font-mono text-sm font-medium tracking-wider uppercase transition-colors">
+                    {project.data.client || project.data.title}
+                  </span>
+                </li>
+              ))
+            }
+          </ul>
+          <!-- All Works link -->
+          <Button href="/works" variant="primary" size="sm" class="order-1 h-fit w-fit xl:order-2">
+            {t('card.view.all')}
+          </Button>
+        </div>
+        <!-- Slot machine container -->
+        <div class="relative mt-12 flex flex-1 flex-col justify-end overflow-hidden">
+          {
+            projects.map((project, i) => (
+              <div class="project-detail absolute inset-x-0 bottom-0 space-y-4" data-slide={i} aria-hidden="true">
+                <h2 class="slot-field font-grotesk text-[clamp(1.2rem,1.9vw,2.2rem)] leading-[1.2] tracking-tight">
+                  {project.data.title}
+                </h2>
+
+                <p class="slot-field w-full font-mono text-[clamp(10px,1.2vw,1rem)] leading-relaxed">
+                  {project.data.description}
+                </p>
+
+                <div class="slot-field mb-6 flex flex-col items-start gap-4 font-mono text-[clamp(0.5rem,1.2vw,0.8rem)]">
+                  <div class="flex items-center gap-3">
+                    <span class="text-muted tracking-wide uppercase">{t('card.view.year')}:</span>
+                    <span class="tracking-wider">{project.data.date.getUTCFullYear()}</span>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-2">
+                    {project.data.tags.map((tag) => (
+                      <span class="border-muted rounded-md border px-2 py-1">{tag}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <Button href={`/works/${project.id}`} variant="primary" size="sm" class="w-full">
+                  {t('card.view.work')}
+                </Button>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- ── RIGHT PANEL: Images ── -->
+      <div class="relative overflow-hidden">
+        {
+          projects.map((project, i) => (
+            <div class="project-image-slide absolute inset-0" data-slide={i} aria-hidden="true">
+              <Image
+                src={project.data.coverImage}
+                alt={`${project.data.title} preview`}
+                class="block h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const section = document.getElementById('project-showcase')!;
+  const details = gsap.utils.toArray<HTMLElement>('.project-detail');
+  const imageSlides = gsap.utils.toArray<HTMLElement>('.project-image-slide');
+  const navBars = gsap.utils.toArray<HTMLElement>('.nav-bar');
+  const navLabels = gsap.utils.toArray<HTMLElement>('.showcase-nav-item span:last-child');
+  const countEl = document.getElementById('count-current');
+  const total = details.length;
+  let current = 0;
+
+  function getFields(d: HTMLElement) {
+    return d.querySelectorAll<HTMLElement>('.slot-field');
+  }
+
+  function setNavActive(i: number) {
+    navBars.forEach((bar, j) => {
+      gsap.to(bar, {
+        width: j === i ? 26 : 16,
+        backgroundColor: j === i ? 'var(--color-accent)' : 'transparent',
+        duration: 0.35,
+        ease: 'power2.out',
+        overwrite: true,
+      });
+    });
+    navLabels.forEach((label, j) => {
+      gsap.to(label, {
+        color: j === i ? 'var(--color-foreground)' : 'var(--color-muted)',
+        duration: 0.35,
+        ease: 'power2.out',
+        overwrite: true,
+      });
+    });
+    if (countEl) countEl.textContent = String(i + 1).padStart(2, '0');
+  }
+
+  function init() {
+    imageSlides.forEach((slide, i) => {
+      gsap.set(slide, { clipPath: i === 0 ? 'inset(0% 0 0% 0)' : 'inset(100% 0 0% 0)' });
+    });
+    details.forEach((detail, i) => {
+      const fields = getFields(detail);
+      if (i === 0) {
+        gsap.set(detail, { autoAlpha: 1 });
+        gsap.set(fields, { y: 0, opacity: 1 });
+        detail.removeAttribute('aria-hidden');
+      } else {
+        gsap.set(detail, { autoAlpha: 0 });
+        gsap.set(fields, { y: 56, opacity: 0 });
+        detail.setAttribute('aria-hidden', 'true');
+      }
+    });
+    setNavActive(0);
+  }
+
+  function goTo(next: number, direction: 1 | -1 = 1) {
+    if (next === current || next < 0 || next >= total) return;
+
+    const prev = current;
+    current = next;
+    setNavActive(next);
+
+    const exitY = direction > 0 ? -48 : 48;
+    const enterY = direction > 0 ? 60 : -60;
+
+    gsap.killTweensOf(imageSlides[prev]);
+    gsap.killTweensOf(imageSlides[next]);
+    gsap.killTweensOf(getFields(details[prev]));
+    gsap.killTweensOf(getFields(details[next]));
+
+    // agresive cleaning: hide any intermediate slide that may have remained alive
+    details.forEach((detail, index) => {
+      if (index !== prev && index !== next) {
+        gsap.killTweensOf(getFields(detail));
+        gsap.set(detail, { autoAlpha: 0 });
+        detail.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    // Image wipe
+    gsap.set(imageSlides[next], { clipPath: direction > 0 ? 'inset(100% 0 0% 0)' : 'inset(0% 0 100% 0)' });
+    gsap.to(imageSlides[next], { clipPath: 'inset(0% 0 0% 0)', duration: 0.85, ease: 'power3.inOut' });
+    gsap.to(imageSlides[prev], {
+      clipPath: direction > 0 ? 'inset(0% 0 100% 0)' : 'inset(100% 0 0% 0)',
+      duration: 0.85,
+      ease: 'power3.inOut',
+    });
+
+    // Slot machine exit
+    gsap.to(getFields(details[prev]), {
+      y: exitY,
+      opacity: 0,
+      duration: 0.28,
+      stagger: { each: 0.02, ease: 'power1.in' }, // Faster exit
+      ease: 'power2.in',
+      onComplete: () => {
+        gsap.set(details[prev], { autoAlpha: 0 });
+        details[prev].setAttribute('aria-hidden', 'true');
+      },
+    });
+
+    // Slot machine enter
+    gsap.set(details[next], { autoAlpha: 1 });
+    details[next].removeAttribute('aria-hidden');
+    gsap.set(getFields(details[next]), { y: enterY, opacity: 0 });
+
+    gsap.to(getFields(details[next]), {
+      y: 0,
+      opacity: 1,
+      duration: 0.45,
+      stagger: { each: 0.03, ease: 'power2.out' }, // Reduced for the button to enter on time
+      ease: 'power3.out',
+      // We remove the delay: 0.1 for the response to be immediate
+    });
+  }
+
+  function initScroll() {
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: (self) => {
+        let nextIndex = Math.round(self.progress * (total - 1));
+        nextIndex = Math.max(0, Math.min(nextIndex, total - 1));
+
+        if (nextIndex !== current) {
+          const direction = nextIndex > current ? 1 : -1;
+          goTo(nextIndex, direction);
+        }
+      },
+    });
+  }
+
+  init();
+  initScroll();
+  window.addEventListener('resize', () => ScrollTrigger.refresh());
+</script>

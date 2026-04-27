@@ -1,0 +1,119 @@
+---
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import Button from '@/components/ui/Button.astro';
+import { t } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, description, coverImage, tags, clientLink, date, client } = project.data;
+---
+
+<section data-slug="section" class="container mx-auto space-y-6 px-4 py-20 opacity-0 md:space-y-8 lg:py-28">
+  <div data-slug="back">
+    <Button href="/works" variant="primary" size="sm">
+      <Icon name="chevron" class="size-5" />
+      {t('works.slug.back')}
+    </Button>
+  </div>
+
+  <div data-slug="intro" class="mb-10 max-w-3xl space-y-4">
+    <MarqueeText text={t('works.slug.marqueetext.info')} />
+    <h1 class="font-clash text-4xl leading-none md:text-6xl lg:text-8xl">
+      {title}
+    </h1>
+    <p class="text-lg leading-relaxed md:text-2xl">
+      {description}
+    </p>
+  </div>
+
+  <div data-slug="cover" class="mb-8 overflow-hidden rounded-2xl">
+    <Image src={coverImage} alt={title} class="h-[40vh] w-full object-cover md:h-[70vh]" loading="lazy" />
+  </div>
+
+  <div data-slug="content" class="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px]">
+    <div class="content-style order-2 min-w-0 lg:order-1">
+      <slot />
+    </div>
+
+    <aside class="order-1 lg:sticky lg:top-32 lg:order-2 lg:self-start">
+      <div class="bg-muted-foreground/30 flex flex-col gap-0.5 overflow-hidden p-0.5">
+        {/* Category */}
+        <div class="bg-primary-foreground p-5">
+          <p class="mb-2 font-mono text-xs tracking-widest uppercase">
+            {t('works.metadata.category')}
+          </p>
+          <div class="flex flex-col gap-1">
+            {tags.map((tag) => <span class="text-xl leading-tight uppercase">{tag}</span>)}
+          </div>
+        </div>
+
+        {/* Year */}
+        <div class="bg-primary-foreground p-5">
+          <p class="mb-2 font-mono text-xs tracking-widest uppercase">
+            {t('works.metadata.year')}
+          </p>
+          <span class="font-tanker text-2xl uppercase">{date.getUTCFullYear()}</span>
+        </div>
+
+        {/* Client */}
+        {
+          client && (
+            <div class="bg-primary-foreground p-5">
+              <p class="mb-2 font-mono text-xs tracking-widest uppercase">{t('works.metadata.client')}</p>
+              <span class="font-tanker text-2xl uppercase">{client}</span>
+            </div>
+          )
+        }
+      </div>
+
+      {/* Visit live site button */}
+      {
+        clientLink && (
+          <div class="mt-2">
+            <Button
+              href={clientLink}
+              variant="primary"
+              size="lg"
+              class="w-full justify-between"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('works.slug.visitProjects')}
+              <Icon name="arrow" />
+            </Button>
+          </div>
+        )
+      }
+    </aside>
+  </div>
+</section>
+<script>
+  import gsap from 'gsap';
+
+  const section = document.querySelector('[data-slug="section"]');
+  if (section) {
+    const q = (attr: string) => section.querySelector(`[data-slug="${attr}"]`);
+
+    const back = q('back');
+    const intro = q('intro');
+    const cover = q('cover');
+    const content = q('content');
+
+    gsap.set(section, { opacity: 0 });
+    gsap.set([back, intro, cover, content], { opacity: 0, y: 30 });
+
+    gsap
+      .timeline({ defaults: { ease: 'power3.out' } })
+      .to(section, { opacity: 1, duration: 0.01 })
+      .to(back, { opacity: 1, y: 0, duration: 0.5 })
+      .to(intro, { opacity: 1, y: 0, duration: 0.6 }, '-=0.3')
+      .to(cover, { opacity: 1, y: 0, duration: 0.7 }, '-=0.3')
+      .to(content, { opacity: 1, y: 0, duration: 0.7 }, '-=0.4');
+  }
+</script>

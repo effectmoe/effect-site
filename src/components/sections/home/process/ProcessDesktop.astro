@@ -1,0 +1,67 @@
+---
+import { process } from '@/config/process.data';
+import { Image } from 'astro:assets';
+---
+
+<div class="relative hidden flex-col gap-9 overflow-x-hidden lg:flex">
+  {
+    process.map((step, i) => (
+      <div class="process-desk-card bg-muted-foreground/30 flex w-full flex-col gap-0.5 p-0.5 opacity-0">
+        <div class="flex min-h-[500px] flex-col gap-0.5 xl:flex-row">
+          <div class="bg-primary-foreground flex w-full flex-col justify-between p-6 xl:w-[50%]">
+            <div class="space-y-3">
+              <span class="text-muted block font-mono text-xl xl:text-2xl">{step.num}</span>
+              <h3 class="text-3xl font-semibold md:text-4xl">{step.title}</h3>
+              <p class="text-muted font-mono text-base md:text-lg lg:max-w-md xl:max-w-lg">{step.description}</p>
+            </div>
+
+            {step.keywords && (
+              <div class="divide-muted-foreground mt-auto flex w-full flex-col divide-y-2 divide-dashed">
+                {step.keywords.map((kw) => (
+                  <div class="text-muted py-4 font-mono text-xs font-bold tracking-widest uppercase">{kw}</div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div class="bg-primary-foreground relative flex min-h-[300px] w-full items-center justify-center overflow-hidden xl:min-h-auto xl:w-[60%]">
+            <Image
+              src={step.image}
+              alt={step.title}
+              class="h-full w-full object-cover transition-all duration-700 hover:opacity-100"
+            />
+          </div>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const initCards = () => {
+    const cards = document.querySelectorAll('.process-desk-card');
+
+    cards.forEach((card) => {
+      gsap.set(card, { clipPath: 'inset(0 100% 0 0)' });
+
+      gsap.to(card, {
+        clipPath: 'inset(0 0% 0 0)',
+        opacity: 1,
+        duration: 0.9,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: card,
+          start: 'top 85%',
+          once: true,
+        },
+      });
+    });
+  };
+
+  initCards();
+</script>

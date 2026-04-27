@@ -1,0 +1,243 @@
+/* Markdown / MDX Content Styles */
+
+/* Headings */
+.content-style h1 {
+  font-family: var(--font-clash);
+  font-size: 2.5rem;
+  letter-spacing: 0.02em;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  line-height: 1.15;
+  scroll-margin-top: 6rem;
+}
+
+.content-style h2 {
+  font-family: var(--font-clash);
+  font-size: 2.25rem;
+  letter-spacing: 0.02em;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  line-height: 1.15;
+  scroll-margin-top: 6rem;
+}
+
+.content-style h3 {
+  font-family: var(--font-clash);
+  font-size: 1.75rem;
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+  scroll-margin-top: 6rem;
+}
+
+.content-style h4 {
+  font-family: var(--font-clash);
+  font-size: 1.375rem;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Paragraphs */
+.content-style p {
+  font-family: var(--font-grotesk);
+  font-size: 1.5rem; /* 24px */
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+/* Lists */
+.content-style ul,
+.content-style ol {
+  margin-bottom: 1.75rem;
+  padding-left: 1rem;
+}
+
+.content-style ul {
+  list-style-type: disc;
+}
+
+.content-style ol {
+  list-style-type: disc;
+}
+
+.content-style li {
+  margin-bottom: 0.625rem;
+  font-size: 1.5rem;
+  line-height: 1.75;
+}
+
+.content-style li::marker {
+  color: var(--color-accent);
+}
+
+/* Links */
+.content-style a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  transition: opacity 0.2s ease;
+}
+
+.content-style a:hover {
+  opacity: 0.8;
+}
+
+/* Code blocks */
+.content-style pre {
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.75rem;
+  overflow-x: auto;
+}
+
+.content-style code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+}
+
+.content-style :not(pre) > code {
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.3rem;
+  font-size: 0.95rem;
+}
+
+/* Blockquotes */
+.content-style blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1.5rem;
+  margin: 2.5rem 0;
+  font-style: italic;
+  font-size: 1.1875rem;
+  color: var(--color-muted);
+}
+
+/* ─── Image grid — card-within-card pattern ─────────────────── */
+.content-style .project-images {
+  background-color: var(--color-primary-foreground);
+  border-radius: 1rem;
+  padding: 3px;
+  gap: 3px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  overflow: hidden;
+  margin-bottom: 1.75rem;
+}
+
+.content-style .project-images:nth-child(odd):last-child,
+.content-style .project-images img:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.content-style .project-images img {
+  border-radius: calc(1rem - 2px);
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  margin: 0;
+  display: block;
+}
+
+
+/* Regular standalone images (not inside project-images) */
+.content-style > img,
+.content-style p > img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.875rem;
+  margin: 0.5rem 0 1.5rem;
+  display: block;
+}
+
+/* Tables */
+.content-style table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 1rem;
+  border: 2px solid var(--color-muted-foreground);
+}
+
+.content-style th,
+.content-style td {
+  padding: 0.875rem;
+  text-align: left;
+  border-bottom:  2px solid var(--color-muted-foreground);
+  border-right: 2px solid var(--color-muted-foreground);
+}
+
+.content-style th {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background-color: var(--color-primary-foreground);
+}
+
+/* Horizontal rule */
+.content-style hr {
+  border: none;
+  margin: 3rem 0;
+}
+
+/* Strong and emphasis */
+.content-style strong {
+  font-weight: 400;
+}
+
+.content-style em {
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+
+  .content-style h1 {
+    scroll-margin-top: 32rem;
+    font-size: 2rem;
+  }
+
+  .content-style h2 {
+    font-size: 1.875rem;
+    scroll-margin-top: 32rem;
+  }
+
+  .content-style h3 {
+    font-size: 1.5rem;
+  }
+
+  .content-style p,
+  .content-style li {
+    font-size: 1.0625rem;
+  }
+
+  .content-style .project-images {
+    grid-template-columns: 1fr;
+  }
+
+  .content-style .project-images img {
+    height: 220px;
+  }
+
+  .content-style .project-images.single img {
+    height: 260px;
+  }
+
+  .content-style hr {
+    border: none;
+    margin: 1.5rem 0;
+  }
+
+  .content-style table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  .content-style table {
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    scrollbar-width: thin;
+  }
+}

@@ -1,0 +1,17 @@
+---
+interface Props {
+  text: string;
+  className?: string;
+}
+
+const { text, className = '' } = Astro.props;
+---
+
+<div
+  class={`border-muted border-l-2 text-primary inline-block bg-white px-2 py-1 font-mono text-xs font-bold tracking-widest uppercase ${className}`}
+>
+  {text}
+</div>
+<!-- <div class={`font-mono text-muted flex items-center gap-2 text-base md:text-lg ${className}`}>
+  [ {text} ]
+</div> -->

@@ -1,0 +1,92 @@
+---
+title: "Cipres Energy"
+tags: ["Web Design", "Web Development", "UI/UX"]
+description: "A high-performance website template built for solar energy companies — designed to communicate trust, showcase real installations with technical detail, and turn curious visitors into qualified leads."
+coverImage: "../../assets/works/cipres-energy/cipres-energy-01.webp"
+client: "Cipres Energy"
+date: 2025-11-10
+featured: false
+clientLink: "https://cuterdev.lemonsqueezy.com/"
+icon: "cipres-energy-logo"
+---
+## The Challenge
+
+Solar energy companies operate in a high-trust, high-consideration market. A homeowner or business owner evaluating a solar installation isn't making an impulse decision — they're committing to a 20-year relationship with a technology they probably don't fully understand yet. The website has to do a lot of heavy lifting: build credibility, explain the process, showcase real completed projects with real numbers, and make it easy to take the next step.
+
+Most solar company websites fail at this. They rely on stock photos of panels on rooftops, vague promises about savings, and contact forms that feel like filling out a tax return. Cipres Solar was built to be the opposite — specific, data-driven, and visually confident enough to match the scale of what solar companies actually do.
+
+---
+
+## Design Process
+
+The design direction was clear from the start: **industrial strength meets modern clarity.**
+
+Solar installations are physical, technical, real-world projects. The design had to reflect that weight without feeling heavy or dated:
+
+- Video backgrounds on every hero section to immediately communicate the scale and energy of solar infrastructure
+- A projects section built around data — each installation shows panel count, capacity, CO2 saved per year, energy generated, and payback period front and center
+- Category filtering across four installation types — Residential, Commercial, Community, and Industrial — so prospects can find work that mirrors their own situation
+- A work process section on the homepage to walk visitors through exactly what happens from consultation to installation
+- A dedicated About page with a FAQ section to handle the most common objections before they become reasons not to call
+
+Typography was kept clean and functional — this isn't a creative studio, it's an infrastructure company. The visual personality comes from the video backgrounds and the project data, not from decorative typography.
+
+---
+
+## Technical Decisions
+
+Cipres Solar required a fundamentally different content schema than any of the previous templates — the project data model had to carry real technical and financial information:
+
+| Tool | Why |
+|---|---|
+| **Astro 5** | Static-first with SSR, ideal for content-heavy pages |
+| **React 19** | Powers the carousel, hover effects, and interactive form |
+| **GSAP + Lenis** | Scroll-triggered animations and smooth video hero transitions |
+| **Tailwind CSS v4** | Fast, consistent design system across all pages |
+| **Resend + Rate Limiting** | Production-grade contact form with honeypot and request throttling |
+| **Netlify Adapter** | SSR deployment with Netlify's image CDN for optimized project photos |
+
+The project content schema was the most involved part of the build. Each project carries `capacity`, `panelCount`, `co2Saved`, `energyGenerated`, and `paybackPeriod` as structured fields — not buried in markdown prose, but surfaced as typed data that can be displayed consistently across cards and detail pages. Optional `challenges` and `solutions` arrays give solar companies a structured way to tell the story of each installation without writing free-form content from scratch.
+
+The contact form security also got more attention here than in previous templates — honeypot fields, rate limiting via Upstash, and server-side email validation layered together to protect against spam without adding friction for real prospects.
+
+---
+
+## The Result
+
+Cipres Solar ships as a complete, production-ready website for solar energy companies:
+
+- Four core pages — Home, About, Projects, Contact
+- Video backgrounds on every hero section
+- Projects with category filtering — Residential, Commercial, Community, Industrial
+- Rich project detail pages with technical specs — capacity, panel count, CO2 saved, payback period
+- Optional challenges and solutions sections per project
+- Work process timeline on the homepage
+- FAQ section with accordion on the About page
+- Contact page with working hours, phone, email, and social links
+- Multi-layer contact form security — honeypot, rate limiting, email validation
+- Partner logos section
+- Automatic sitemap and full SEO meta tags
+- Legal pages out of the box
+
+The data-rich project pages are the standout feature — seeing "32 panels, 12 kW system, 9.4 tons of CO2 saved per year, 7-year payback period" on a real completed installation is more persuasive than any marketing copy.
+
+---
+
+## Lessons Learned
+
+Building for a specific industry forced a level of domain thinking that generic agency templates don't require. I had to ask: what does a solar company actually need to prove to a prospect? The answer wasn't just "we do good work" — it was "here are the exact numbers from a job like yours."
+
+> **Data is design.** The most impactful design decision in this project wasn't a color choice or a layout — it was structuring the project schema to surface real technical and financial metrics prominently. That data does more conversion work than any hero section.
+
+The multi-page video background approach also surfaced performance challenges I hadn't anticipated. Videos need careful loading strategies — autoplay, muted, poster fallbacks, and lazy loading — to avoid hammering page load times on slower connections. Getting that right across three different hero sections required more iteration than expected.
+
+---
+
+## What I'd Do Differently
+
+A few things I'd revisit looking back:
+
+- **A savings calculator** — an interactive tool where visitors input their monthly electricity bill and get an estimated ROI would be a natural fit for this template and a significant conversion driver. It's the kind of feature that turns a brochure site into a sales tool.
+- **Before/after project imagery** — a slider component showing the installation site before and after would make the project pages far more compelling than static gallery images alone.
+- **Multilingual support** — solar companies often operate across regions with different languages. A built-in i18n setup from day one would make this template significantly more useful internationally without requiring a major refactor.

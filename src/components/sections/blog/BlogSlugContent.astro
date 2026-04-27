@@ -1,0 +1,225 @@
+---
+import Button from '@/components/ui/Button.astro';
+import { t } from '@/lib/utils';
+import type { MarkdownHeading } from 'astro';
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+const pageUrl = Astro.url.href;
+---
+
+<div class="flex flex-col lg:flex-row">
+  <!-- MOBILE: Accordion TOC -->
+  <div class="border-muted-foreground/30 bg-primary-foreground mb-6 border-2 lg:hidden">
+    <button
+      id="toc-toggle"
+      class="flex w-full items-center justify-between px-4 py-4 font-mono text-sm uppercase"
+      aria-expanded="false"
+    >
+      <span>{t('blog.slug.aside.mobile.nav')}</span>
+      <Icon name="chevron" id="toc-chevron" class="h-6 w-6 -rotate-90 transition-transform duration-300" />
+    </button>
+
+    <div id="toc-mobile" class="overflow-hidden" style="max-height: 0; transition: max-height 0.35s ease;">
+      <nav class="px-4 pb-4">
+        <ul class="space-y-3">
+          {
+            headings.map((heading) => (
+              <li>
+                <a
+                  href={`#${heading.slug}`}
+                  data-toc-mobile-link
+                  class="font-grotesk text-muted block text-sm font-semibold uppercase transition-colors duration-300"
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <!-- Share en mobile -->
+      <div class="border-muted-foreground/30 border-t-2 px-4 py-4">
+        <p class="text-muted mb-3 font-mono text-xs tracking-widest uppercase">{t('blog.slug.aside.share')}</p>
+        <div class="flex gap-3">
+          <Button
+            href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="primary"
+            size="icon"
+            aria-label="Share on X"
+          >
+            <Icon name="socials/x" class="h-5 w-5" />
+          </Button>
+
+          <Button
+            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="primary"
+            size="icon"
+            aria-label="Share on Facebook"
+          >
+            <Icon name="socials/facebook" class="h-5 w-5" />
+          </Button>
+
+          <Button
+            href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="primary"
+            size="icon"
+            aria-label="Share on LinkedIn"
+          >
+            <Icon name="socials/linkedin" class="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESKTOP: Aside sticky -->
+  <aside class="sticky top-28 hidden h-fit lg:grid lg:w-1/3 xl:w-1/4">
+    <div class="space-y-12 p-6">
+      <p class="mb-6 font-mono text-sm uppercase">{t('blog.slug.aside.desktop.nav')}</p>
+      <nav>
+        <ul class="space-y-4">
+          {
+            headings.map((heading) => (
+              <li>
+                <a
+                  href={`#${heading.slug}`}
+                  data-toc-link
+                  class="font-grotesk text-muted block text-sm font-semibold uppercase transition-colors duration-300"
+                >
+                  {heading.text}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </div>
+
+    <div class="p-6">
+      <p class="mb-6 font-mono text-sm uppercase">{t('blog.slug.aside.share')}</p>
+      <div class="flex gap-3">
+        <Button
+          href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="primary"
+          size="icon"
+          aria-label="Share on X"
+        >
+          <Icon name="socials/x" class="h-5 w-5" />
+        </Button>
+
+        <Button
+          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="primary"
+          size="icon"
+          aria-label="Share on Facebook"
+        >
+          <Icon name="socials/facebook" class="h-5 w-5" />
+        </Button>
+
+        <Button
+          href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(pageUrl)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="primary"
+          size="icon"
+          aria-label="Share on LinkedIn"
+        >
+          <Icon name="socials/linkedin" class="h-5 w-5" />
+        </Button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <div class="content-style flex-1 p-0 md:px-6">
+    <slot />
+  </div>
+</div>
+
+<style>
+  html {
+    scroll-behavior: smooth;
+  }
+</style>
+
+<script>
+  // ── Mobile accordion ──────────────────────────────────────
+  const toggleBtn = document.getElementById('toc-toggle');
+  const mobilePanel = document.getElementById('toc-mobile');
+  const chevron = document.getElementById('toc-chevron');
+
+  toggleBtn?.addEventListener('click', () => {
+    const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
+
+    if (isOpen) {
+      mobilePanel!.style.maxHeight = '0';
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      chevron?.classList.remove('rotate-90');
+    } else {
+      mobilePanel!.style.maxHeight = mobilePanel!.scrollHeight + 'px';
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      chevron?.classList.add('rotate-90');
+    }
+  });
+
+  // Close mobile accordion when a link is clicked
+  document.querySelectorAll('[data-toc-mobile-link]').forEach((link) => {
+    link.addEventListener('click', () => {
+      mobilePanel!.style.maxHeight = '0';
+      toggleBtn?.setAttribute('aria-expanded', 'false');
+      chevron?.classList.remove('rotate-180');
+    });
+  });
+
+  // ── Scroll spy ────────────────────────────────────────────
+  function initScrollSpy() {
+    const links = document.querySelectorAll('[data-toc-link]');
+    const sections = Array.from(links).map((link) => {
+      const id = link.getAttribute('href')?.replace('#', '');
+      return document.getElementById(id!);
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const activeId = entry.target.getAttribute('id');
+            links.forEach((link) => {
+              const href = link.getAttribute('href')?.replace('#', '');
+              if (href === activeId) {
+                link.classList.add('text-primary');
+                link.classList.remove('text-muted');
+              } else {
+                link.classList.remove('text-primary');
+                link.classList.add('text-muted');
+              }
+            });
+          }
+        });
+      },
+      { rootMargin: '-10% 0% -70% 0%', threshold: 1.0 },
+    );
+
+    sections.forEach((section) => {
+      if (section) observer.observe(section);
+    });
+  }
+
+  initScrollSpy();
+  document.addEventListener('astro:after-swap', initScrollSpy);
+</script>

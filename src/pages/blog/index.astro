@@ -1,0 +1,13 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import { t } from '@/lib/utils';
+import BlogContent from '@/components/sections/blog/BlogContent.astro';
+
+const blogs = await getCollection('blogs');
+const sortedBlogs = blogs.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+---
+
+<Layout title={t('meta.blog.title')} description={t('meta.blog.description')} keywords={t('meta.blog.keywords')}>
+  <BlogContent blogs={sortedBlogs} />
+</Layout>

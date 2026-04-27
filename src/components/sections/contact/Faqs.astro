@@ -1,0 +1,116 @@
+---
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import { faqs } from '@/config/faq.data';
+import { t } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+---
+
+<section id="faq-section" class="container mx-auto px-4 py-20 md:py-28">
+  <div class="mb-12 flex flex-col items-center space-y-3 text-center md:space-y-6">
+    <MarqueeText text={t('faq.marqueetext')} />
+    <h2 class="font-clash max-w-4xl text-4xl md:text-7xl">
+      {t('faq.title')}
+    </h2>
+    <p class="text-lg leading-relaxed md:text-2xl">
+      {t('faq.description')}
+    </p>
+  </div>
+
+  <div class="mx-auto max-w-5xl">
+    <div class="bg-muted-foreground/80 flex w-full flex-col gap-0.5 p-0.5">
+      {
+        faqs.map((faq, i) => (
+          <div
+            class:list={['faq-item', 'bg-primary-foreground cursor-pointer overflow-hidden', { 'is-open': i === 0 }]}
+            data-index={i}
+            role="button"
+            tabindex="0"
+            aria-expanded={i === 0 ? 'true' : 'false'}
+          >
+            <div class="faq-question flex items-center justify-between gap-4 px-6 py-5">
+              <span class="text-lg tracking-wide md:text-xl">{faq.question}</span>
+              <div class="faq-icon shrink-0 transition-transform duration-300">
+                <Icon name="plus" class="h-5 w-5" />
+              </div>
+            </div>
+
+            <div class="faq-answer">
+              <div>
+                <p class="text-muted px-6 pb-6 font-mono text-lg leading-relaxed">{faq.answer}</p>
+              </div>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .faq-answer {
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+      height 0.35s ease-out,
+      opacity 0.35s ease-out;
+  }
+
+  .faq-item.is-open .faq-answer {
+    opacity: 1;
+  }
+
+  .faq-item.is-open .faq-icon {
+    transform: rotate(45deg);
+    color: var(--color-light);
+  }
+
+  .faq-item:focus-visible {
+    outline: 2px solid var(--color-orange);
+    outline-offset: 0px;
+  }
+</style>
+
+<script>
+  const items = document.querySelectorAll<HTMLElement>('.faq-item');
+
+  function toggle(item: HTMLElement) {
+    const answer = item.querySelector('.faq-answer') as HTMLElement;
+    const isOpen = item.classList.contains('is-open');
+
+    items.forEach((el) => {
+      el.classList.remove('is-open');
+      el.setAttribute('aria-expanded', 'false');
+      const elAnswer = el.querySelector('.faq-answer') as HTMLElement;
+      elAnswer.style.height = '0px';
+    });
+
+    if (!isOpen) {
+      item.classList.add('is-open');
+      item.setAttribute('aria-expanded', 'true');
+
+      answer.style.height = answer.scrollHeight + 'px';
+    }
+  }
+  items.forEach((item) => {
+    item.addEventListener('click', () => toggle(item));
+    item.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle(item);
+      }
+    });
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const firstItem = items[0];
+    if (firstItem && firstItem.classList.contains('is-open')) {
+      const firstAnswer = firstItem.querySelector('.faq-answer') as HTMLElement;
+      firstAnswer.style.height = firstAnswer.scrollHeight + 'px';
+    }
+  });
+</script>

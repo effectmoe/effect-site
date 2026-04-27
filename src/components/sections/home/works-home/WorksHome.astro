@@ -1,0 +1,64 @@
+---
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import type { CollectionEntry } from 'astro:content';
+import { t } from '@/lib/utils';
+import WorksCardHome from './WorksCardHome.astro';
+import WorksCardMobileHome from './WorksCardMobileHome.astro';
+
+interface Props {
+  projects: CollectionEntry<'projects'>[];
+}
+
+const { projects } = Astro.props;
+---
+
+<section data-works-index="section" class="container mx-auto space-y-6 px-4 py-20 md:space-y-12 lg:py-28">
+  <div class="flex flex-col items-center space-y-3 md:space-y-5">
+    <div data-works-index="marquee">
+      <MarqueeText text={t('index.works.marqueetext')} />
+    </div>
+    <h2 data-works-index="heading" class="font-clash text-4xl md:text-7xl">
+      {t('index.works.title')}
+    </h2>
+    <p data-works-index="desc" class="max-w-5xl text-center text-lg leading-relaxed md:text-xl">
+      {t('index.works.description')}
+    </p>
+  </div>
+  <!-- Desktop -->
+  <div class="-my-0.5 hidden md:block">
+    <WorksCardHome projects={projects} />
+  </div>
+
+  <!-- Mobile -->
+  <div class="md:hidden">
+    <WorksCardMobileHome projects={projects} />
+  </div>
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const section = document.querySelector('[data-works-index="section"]');
+  if (section) {
+    const q = (attr: string) => section.querySelector(`[data-works-index="${attr}"]`);
+
+    const card = section.querySelector('[data-works-card="wrapper"]');
+    gsap.set([q('marquee'), q('heading'), q('desc'), card], { opacity: 0, y: 20 });
+
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 80%',
+          once: true,
+        },
+      })
+      .to(q('marquee'), { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' })
+      .to(q('heading'), { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.3')
+      .to(q('desc'), { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, '-=0.4')
+      .to(card, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.4');
+  }
+</script>

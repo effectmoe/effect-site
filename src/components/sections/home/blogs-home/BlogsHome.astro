@@ -1,0 +1,62 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { t } from '@/lib/utils';
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import BlogCard from '../../blog/BlogCard.astro';
+import Button from '@/components/ui/Button.astro';
+
+interface Props {
+  blogs: CollectionEntry<'blogs'>[];
+}
+
+const { blogs } = Astro.props;
+---
+
+<section data-blogs-index="section" class="container mx-auto space-y-6 px-4 py-20 md:space-y-12 lg:py-28">
+  <div class="flex flex-col space-y-3 md:space-y-5">
+    <div data-blogs-index="marquee">
+      <MarqueeText text={t('index.blogs.marqueetext')} />
+    </div>
+    <div
+      data-blogs-index="heading"
+      class="flex flex-col items-start justify-between space-y-3 md:flex-row md:items-center md:space-y-0"
+    >
+      <h2 class="font-clash max-w-6xl text-4xl md:text-7xl">
+        {t('index.blogs.title')}
+      </h2>
+      <Button href="/blog" variant="primary">
+        {t('index.blogs.button')}
+      </Button>
+    </div>
+  </div>
+  <div data-blogs-index="card" class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    {blogs.map((blog) => <BlogCard blog={blog} />)}
+  </div>
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const section = document.querySelector('[data-blogs-index="section"]');
+  if (section) {
+    const q = (attr: string) => section.querySelector(`[data-blogs-index="${attr}"]`);
+
+    const card = section.querySelector('[data-blogs-index="card"]');
+    gsap.set([q('marquee'), q('heading'), card], { opacity: 0, y: 20 });
+
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 80%',
+          once: true,
+        },
+      })
+      .to(q('marquee'), { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' })
+      .to(q('heading'), { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.3')
+      .to(card, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.4');
+  }
+</script>

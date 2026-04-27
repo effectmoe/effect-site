@@ -1,0 +1,50 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { render } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import WorkSlugContent from '@/components/sections/works/WorkSlugContent.astro';
+import SlugMoreItems from '@/components/common/SlugMoreItems.astro';
+import WorksCard from '@/components/sections/works/WorksCard.astro';
+import { getRelatedItems } from '@/lib/related';
+import { t } from '@/lib/utils';
+
+export const prerender = true;
+
+export const getStaticPaths = (async () => {
+  const projects = await getCollection('projects');
+
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}) satisfies GetStaticPaths;
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+
+const allProjects = await getCollection('projects');
+const sortedProjects = allProjects.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const currentIndex = sortedProjects.findIndex((p) => p.id === project.id);
+const relatedProjects = getRelatedItems(sortedProjects, currentIndex);
+---
+
+<Layout title={project.data.title} description={project.data.description}>
+  <WorkSlugContent {project}>
+    <Content />
+  </WorkSlugContent>
+  {
+    relatedProjects.length > 0 && (
+      <SlugMoreItems
+        marqueeText={t('works.slug.marqueetext')}
+        heading={t('works.slug.more.works')}
+        buttonLabel={t('works.slug.btn.all.works')}
+        buttonHref="/works"
+      >
+        {relatedProjects.map((project) => (
+          <WorksCard {project} />
+        ))}
+      </SlugMoreItems>
+    )
+  }
+</Layout>

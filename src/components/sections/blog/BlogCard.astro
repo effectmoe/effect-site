@@ -1,0 +1,49 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  blog: CollectionEntry<'blogs'>;
+}
+
+const { blog } = Astro.props;
+
+const formattedDate = new Date(blog.data.pubDate).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<a href={`/blog/${blog.id}`} class="group bg-muted-foreground/30 flex w-full flex-col gap-0.5 p-0.5">
+  <div class="bg-primary-foreground relative aspect-4/5 w-full overflow-hidden md:aspect-video">
+    <Image
+      src={blog.data.heroImage}
+      alt={blog.data.title}
+      class="h-full w-full object-cover grayscale transition-all duration-600 group-hover:scale-105 group-hover:grayscale-0"
+      loading="eager"
+    />
+  </div>
+
+  <div class="bg-primary-foreground flex flex-1 flex-col justify-between space-y-6 p-6">
+    <div class="space-y-3 md:space-y-6">
+      {
+        blog.data.topics && blog.data.topics.length > 0 && (
+          <div class="text-primary-foreground bg-primary inline-block px-3 py-1 font-mono text-xs font-normal tracking-widest uppercase">
+            {blog.data.topics[0]}
+          </div>
+        )
+      }
+      <h3 class="text-2xl font-semibold md:text-3xl">
+        {blog.data.title}
+      </h3>
+      <p class="text-lg leading-relaxed md:text-xl">
+        {blog.data.description}
+      </p>
+    </div>
+
+    <div class="text-muted font-mono text-xs font-semibold tracking-widest uppercase">
+      {formattedDate}
+    </div>
+  </div>
+</a>

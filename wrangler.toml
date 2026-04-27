@@ -1,0 +1,13 @@
+name = "effect-moe"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding      = "brain_knowledge"
+database_name = "brain-knowledge"
+database_id  = "6a074384-8075-490f-8393-59225a707cd2"
+
+[[r2_buckets]]
+binding     = "CRAWLER_LOGS"
+bucket_name = "effect-ai-crawler-logs"

@@ -1,0 +1,43 @@
+---
+import Button from '@/components/ui/Button.astro';
+import { contactInfo, socialLinks } from '@/config/socialLinks.data';
+import { t } from '@/lib/utils';
+import { Icon } from 'astro-icon/components';
+---
+
+<div>
+  <h2 class="font-clash text-4xl md:text-5xl">{t('contact.general.title')}</h2>
+  <p class="mt-5 max-w-xl text-base leading-relaxed md:text-xl">
+    {t('contact.general.description')}
+  </p>
+
+  <div class="mt-8 space-y-6">
+    <div class="space-y-1">
+      <span class="block font-mono text-sm font-semibold uppercase">{t('contact.email')}</span>
+      <a href={`mailto:${contactInfo.email}`} class="text-lg hover:underline hover:underline-offset-4 md:text-xl">
+        {contactInfo.email}
+      </a>
+    </div>
+
+    <div class="space-y-1">
+      <span class="block font-mono text-sm font-semibold uppercase">{t('contact.office')}</span>
+      <div class="text-lg leading-relaxed md:text-xl">
+        <p>{contactInfo.workingHours}</p>
+        <p>{contactInfo.workingDays}</p>
+      </div>
+    </div>
+
+    <div class="space-y-2">
+      <span class="block font-mono text-sm font-semibold uppercase">{t('contact.follow')}</span>
+      <div class="flex flex-wrap gap-2">
+        {
+          socialLinks.map((link) => (
+            <Button href={link.href} variant="primary" size="icon" target="_blank" rel="noopener noreferrer">
+              <Icon name={`socials/${link.icon}`} class="h-5 w-5" />
+            </Button>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</div>

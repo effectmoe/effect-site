@@ -1,0 +1,59 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection } from 'astro:content';
+import { render } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import BlogSlugHeader from '@/components/sections/blog/BlogSlugHeader.astro';
+import BlogSlugContent from '@/components/sections/blog/BlogSlugContent.astro';
+import SlugMoreItems from '@/components/common/SlugMoreItems.astro';
+import BlogCard from '@/components/sections/blog/BlogCard.astro';
+import Button from '@/components/ui/Button.astro';
+import { Icon } from 'astro-icon/components';
+import { getRelatedItems } from '@/lib/related';
+import { t } from '@/lib/utils';
+
+export const prerender = true;
+
+export const getStaticPaths = (async () => {
+  const blogs = await getCollection('blogs');
+
+  return blogs.map((blog) => ({
+    params: { slug: blog.id },
+    props: { blog },
+  }));
+}) satisfies GetStaticPaths;
+
+const { blog } = Astro.props;
+const { Content, headings } = await render(blog);
+
+const allBlogs = await getCollection('blogs');
+const sortedBlogs = allBlogs.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+const currentIndex = sortedBlogs.findIndex((p) => p.id === blog.id);
+const relatedBlogs = getRelatedItems(sortedBlogs, currentIndex);
+---
+
+<Layout title={blog.data.title} description={blog.data.description}>
+  <article class="container mx-auto space-y-6 px-4 py-20 md:space-y-16 md:py-28">
+    <Button href="/blog" variant="primary" size="sm">
+      <Icon name="chevron" class="h-4 w-4" />{t('blog.slug.back')}
+    </Button>
+    <BlogSlugHeader {blog} />
+    <BlogSlugContent {headings}>
+      <Content />
+    </BlogSlugContent>
+  </article>
+  {
+    relatedBlogs.length > 0 && (
+      <SlugMoreItems
+        marqueeText={t('blog.slug.marqueetext')}
+        heading={t('blog.slug.more.posts')}
+        buttonLabel={t('blog.slug.btn.all.posts')}
+        buttonHref="/blog"
+      >
+        {relatedBlogs.map((blog) => (
+          <BlogCard {blog} />
+        ))}
+      </SlugMoreItems>
+    )
+  }
+</Layout>

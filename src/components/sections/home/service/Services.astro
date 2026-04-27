@@ -1,0 +1,49 @@
+---
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import { t } from '@/lib/utils';
+import Panels from './Panels.astro';
+---
+
+<section data-services="section" class="container mx-auto space-y-6 px-4 py-20 md:space-y-12 lg:py-28">
+  <div class="flex flex-col items-start space-y-3 md:items-center md:space-y-5">
+    <div data-services="marquee">
+      <MarqueeText text={t('index.services.marqueetext')} />
+    </div>
+    <h2 data-services="heading" class="font-clash text-4xl md:text-7xl">
+      {t('index.services.title')}
+    </h2>
+    <p data-services="desc" class="max-w-5xl text-start text-lg leading-relaxed md:text-center md:text-xl">
+      {t('index.services.description')}
+    </p>
+  </div>
+  <div data-services="panels">
+    <Panels />
+  </div>
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const section = document.querySelector('[data-services="section"]');
+  if (section) {
+    const q = (attr: string) => section.querySelector(`[data-services="${attr}"]`);
+
+    gsap.set([q('marquee'), q('heading'), q('desc'), q('panels')], { opacity: 0, y: 20 });
+
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 80%',
+          once: true,
+        },
+      })
+      .to(q('marquee'), { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' })
+      .to(q('heading'), { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.3')
+      .to(q('desc'), { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, '-=0.4')
+      .to(q('panels'), { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.4');
+  }
+</script>

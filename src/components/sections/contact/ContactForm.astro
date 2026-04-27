@@ -1,0 +1,103 @@
+---
+import Button from '@/components/ui/Button.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<form class="space-y-3" id="contact-form">
+  <div id="form-message" class="hidden"></div>
+
+  <!-- Honeypot -->
+  <input type="text" name="company" style="position:absolute;left:-9999px;width:1px;height:1px;" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+  <!-- Name -->
+  <div class="space-y-1">
+    <label for="first-name" class="label" id="label-name">Name</label>
+    <input type="text" id="first-name" name="name" required placeholder="Your Name" class="input" data-field="name" />
+    <p class="field-error hidden" data-error="name"></p>
+  </div>
+
+  <!-- Email -->
+  <div class="space-y-1">
+    <label for="email" class="label" id="label-email">Email</label>
+    <input type="email" id="email" name="email" required placeholder="email@example.com" class="input" data-field="email" />
+    <p class="field-error hidden" data-error="email"></p>
+  </div>
+
+  <!-- Message -->
+  <div class="space-y-1">
+    <label for="message" class="label" id="label-message">Message</label>
+    <textarea id="message" name="message" rows="6" required placeholder="Your message here..." class="text-area" data-field="message"></textarea>
+    <p class="field-error hidden" data-error="message"></p>
+  </div>
+
+  <Button variant="primary" size="md" id="submit-btn" class="w-full">
+    <span id="btn-text">Submit</span>
+    <span id="btn-loader" class="hidden">
+      <Icon name="spin" class="inline-block h-5 w-5 animate-spin" />
+      Sending...
+    </span>
+  </Button>
+</form>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const btnText = document.getElementById('btn-text');
+  const btnLoader = document.getElementById('btn-loader');
+  const formMessage = document.getElementById('form-message');
+
+  function clearErrors() {
+    document.querySelectorAll('[data-error]').forEach(el => { el.classList.add('hidden'); el.textContent = ''; });
+    document.querySelectorAll('[data-field]').forEach(el => el.classList.remove('input-error'));
+  }
+
+  function showFieldError(field: string, msg: string) {
+    const err = document.querySelector(`[data-error="${field}"]`);
+    const input = document.querySelector(`[data-field="${field}"]`);
+    if (err) { err.classList.remove('hidden'); err.textContent = msg; }
+    input?.classList.add('input-error');
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    formMessage?.classList.add('hidden');
+    clearErrors();
+    submitBtn && (submitBtn.disabled = true);
+    btnText?.classList.add('hidden');
+    btnLoader?.classList.remove('hidden');
+
+    try {
+      const data = Object.fromEntries(new FormData(form));
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        if (formMessage) {
+          formMessage.className = 'p-4 bg-green-100 border-2 border-green-500 rounded-xl text-green-800';
+          formMessage.innerHTML = '<p class="font-semibold">Message sent successfully!</p>';
+          formMessage.classList.remove('hidden');
+        }
+        form.reset();
+      } else if (result.error) {
+        const err = result.error;
+        if (typeof err === 'object') {
+          Object.entries(err).forEach(([field, msg]) => {
+            if (field === 'general') {
+              if (formMessage) { formMessage.className = 'p-4 bg-red-100 border-2 border-red-500 rounded-xl text-red-800'; formMessage.innerHTML = `<p class="font-semibold">${msg}</p>`; formMessage.classList.remove('hidden'); }
+            } else showFieldError(field, msg as string);
+          });
+        }
+      }
+    } catch (err) {
+      if (formMessage) { formMessage.className = 'p-4 bg-red-100 border-2 border-red-500 rounded-xl text-red-800'; formMessage.innerHTML = '<p class="font-semibold">An unexpected error occurred.</p>'; formMessage.classList.remove('hidden'); }
+    } finally {
+      submitBtn && (submitBtn.disabled = false);
+      btnText?.classList.remove('hidden');
+      btnLoader?.classList.add('hidden');
+    }
+  });
+</script>

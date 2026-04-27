@@ -1,0 +1,60 @@
+---
+import { t } from '@/lib/utils';
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import ProcessDesktop from './ProcessDesktop.astro';
+import ProcessMobile from './ProcessMobile.astro';
+---
+
+<section data-process="section" class="container mx-auto px-4 py-20 lg:py-28">
+  <div class="relative flex flex-col lg:flex-row lg:items-start lg:gap-3">
+    <!-- Title / Marquee (Sticky on Desktop) -->
+    <div class="mb-12 w-full shrink-0 space-y-3 md:space-y-5 lg:sticky lg:top-32 lg:mb-0 lg:w-5/12">
+      <div data-process="marquee">
+        <MarqueeText text={t('index.process.marqueetext')} />
+      </div>
+      <h2 data-process="heading" class="font-clash max-w-md text-4xl md:text-7xl">
+        {t('index.process.title')}
+      </h2>
+      <p data-process="description" class="max-w-lg text-lg leading-relaxed md:text-xl">
+        {t('index.process.description')}
+      </p>
+    </div>
+
+    <!-- Desktop -->
+    <div class="hidden w-full overflow-x-hidden lg:block lg:w-7/12">
+      <ProcessDesktop />
+    </div>
+
+    <!-- Mobile -->
+    <div class="block w-full lg:hidden">
+      <ProcessMobile />
+    </div>
+  </div>
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const section = document.querySelector('[data-process="section"]');
+  if (section) {
+    gsap.set(['[data-process="marquee"]', '[data-process="heading"]', '[data-process="description"]'], {
+      opacity: 0,
+      y: 20,
+    });
+
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 80%',
+          once: true,
+        },
+      })
+      .to('[data-process="marquee"]', { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' })
+      .to('[data-process="heading"]', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.3')
+      .to('[data-process="description"]', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.3');
+  }
+</script>

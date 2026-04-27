@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+@import './content-style.css';
+@import './inputs.css';
+
+/* ── Lenis smooth scroll ─────────────────────────────── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+@theme inline {
+  --font-clash: var(--font-clash-display);
+  --font-grotesk: var(--font-space-grotesk);
+  --font-mono: var(--font-roboto-mono);
+  --font-ja: var(--font-zen-kaku);
+
+  --color-background: #eeebe4;
+  --color-foreground: #0a0a0a;
+
+  --color-primary: #141414;
+  --color-primary-foreground: #ffffff;
+
+  --color-surface: oklch(0.269 0 0);
+  --color-surface-light: oklch(1 0 0 / 10%);
+
+  --color-muted: #4b5563;
+  --color-muted-foreground: #9ca3af;
+
+  --color-accent: #c2410c;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-grotesk overflow-x-hidden;
+    font-family: var(--font-space-grotesk), var(--font-zen-kaku), sans-serif;
+  }
+  :lang(ja), .ja {
+    font-family: var(--font-zen-kaku), sans-serif;
+  }
+}
+
+@layer components {
+  main > * + * {
+    @apply relative;
+  }
+  main > * + *::before {
+    content: '';
+    @apply pointer-events-none absolute left-[50%] top-0 -z-10 w-screen -translate-x-1/2 border-t border-dashed border-black/15;
+  }
+}

@@ -1,0 +1,63 @@
+---
+import Button from '@/components/ui/Button.astro';
+import { t } from '@/lib/utils';
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  projects: CollectionEntry<'projects'>[];
+}
+
+const { projects } = Astro.props;
+---
+
+<div data-works-card="wrapper" class="flex flex-col gap-4 pb-12">
+  {projects.map((project, i) => (
+    <div class="bg-muted-foreground/30 flex flex-col gap-0.5 overflow-hidden p-0.5">
+      <!-- Image -->
+      <div class="relative w-full overflow-hidden" style="aspect-ratio: 16/9;">
+        <Image
+          src={project.data.coverImage}
+          alt={`${project.data.title} preview`}
+          class="block h-full w-full object-cover"
+          loading="lazy"
+        />
+      </div>
+
+      <!-- Info -->
+      <div class="bg-primary-foreground relative flex flex-col overflow-hidden p-5 space-y-4">
+
+        <h2 class="font-grotesk text-[clamp(1.5rem,6vw,2.2rem)] leading-[1.2] tracking-tight">
+          {project.data.title}
+        </h2>
+
+        <p class="w-full font-mono text-[clamp(12px,4vw,1rem)] leading-relaxed">
+          {project.data.description}
+        </p>
+
+        <div class="mb-4 flex flex-col items-start gap-4 font-mono text-[clamp(0.7rem,3vw,0.8rem)]">
+          <div class="flex items-center gap-3">
+            <span class="text-muted tracking-wide uppercase">{t('card.view.year')}:</span>
+            <span class="tracking-wider">{project.data.date.getUTCFullYear()}</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            {project.data.tags.map((tag) => (
+              <span class="border-muted rounded-md border px-2 py-1">{tag}</span>
+            ))}
+          </div>
+        </div>
+
+        <Button href={`/works/${project.id}`} variant="primary" size="sm" class="w-full">
+          {t('card.view.work')}
+        </Button>
+      </div>
+    </div>
+  ))}
+
+  <div class="mt-4 flex flex-col">
+    <Button href="/works" variant="primary" size="sm" class="w-full">
+      {t('card.view.all')}
+    </Button>
+  </div>
+</div>

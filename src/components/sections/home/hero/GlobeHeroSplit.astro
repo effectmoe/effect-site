@@ -1,0 +1,121 @@
+---
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import Button from '@/components/ui/Button.astro';
+import { t } from '@/lib/utils';
+---
+
+<div class="relative flex h-dvh w-full flex-col overflow-hidden lg:flex-row">
+  <!-- Left Side: Info (desktop) -->
+  <div
+    class="bg-background relative z-10 order-2 flex h-[25%] w-full flex-col justify-end px-4 pb-4 lg:order-1 lg:h-full lg:w-1/2 lg:justify-end lg:px-14 lg:pb-14"
+  >
+    <div class="flex max-w-5xl flex-col gap-4 lg:gap-6">
+      <div id="hero-marquee-split" class="hidden xl:block" style="visibility: hidden;">
+        <MarqueeText text={t('index.hero.marqueetext')} />
+      </div>
+      <h1
+        id="hero-h1-split"
+        class="font-clash text-[clamp(2rem,8vw,3rem)] leading-[0.93] lg:text-[clamp(3rem,5.5vw,6rem)]"
+        style="visibility: hidden;"
+      >
+        {t('index.hero.h1')}
+      </h1>
+      <div class="flex flex-col gap-3 lg:gap-4">
+        <p
+          id="hero-description-split"
+          class="max-w-xl text-sm leading-relaxed lg:text-[clamp(0.85rem,1.5vw,1.25rem)]"
+          style="visibility: hidden;"
+        >
+          {t('index.hero.description')}
+        </p>
+        <div id="hero-btn-split" class="mt-2 w-full md:mt-4" style="visibility: hidden;">
+          <Button variant="primary" href="/contact">{t('index.hero.btn')}</Button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Globe (desktop) -->
+  <div class="relative order-1 h-[75%] w-full lg:order-2 lg:h-full lg:w-1/2" id="globe-container">
+    <canvas
+      id="globe-canvas-split"
+      class="absolute inset-0 block size-full will-change-transform"
+      style="visibility: hidden; opacity: 0;"></canvas>
+
+    <!-- Coords overlay on globe side -->
+    <div
+      id="hero-coords-split"
+      class="absolute right-[3vw] bottom-[5vh] z-10 font-mono text-xs leading-[1.9] tracking-[0.14em] max-md:hidden"
+      style="visibility: hidden;"
+    >
+      <span id="globe-lon-split">LON 000.0°</span><br />
+      <span>LAT 23.5° N</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  import gsap from 'gsap';
+  import { GlobeRenderer } from './globe.ts';
+
+  const canvas = document.getElementById('globe-canvas-split') as HTMLCanvasElement;
+  const lonEl = document.getElementById('globe-lon-split') as HTMLElement;
+
+  if (canvas && lonEl) {
+    const renderer = new GlobeRenderer(canvas, {}, (deg: number) => {
+      lonEl.textContent = `LON ${String(deg.toFixed(1)).padStart(5, '0')}°`;
+    });
+
+    const marquee = document.getElementById('hero-marquee-split');
+    const h1 = document.getElementById('hero-h1-split');
+    const description = document.getElementById('hero-description-split');
+    const btn = document.getElementById('hero-btn-split');
+    const coords = document.getElementById('hero-coords-split');
+
+    gsap.set([marquee, h1, description, btn], { y: 28, opacity: 0 });
+    gsap.set(coords, { opacity: 0 });
+    gsap.set(canvas, { opacity: 0, scale: 1.04 });
+
+    gsap.set([canvas, marquee, h1, description, btn, coords], { visibility: 'visible' });
+
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+    tl.to(canvas, {
+      opacity: 1,
+      scale: 1,
+      duration: 1.4,
+      ease: 'power2.out',
+    })
+      .to(marquee, { y: 0, opacity: 1, duration: 0.7 }, '-=0.8')
+      .to(h1, { y: 0, opacity: 1, duration: 0.85, ease: 'power4.out' }, '-=0.55')
+      .to(description, { y: 0, opacity: 1, duration: 0.7 }, '-=0.5')
+      .to(btn, { y: 0, opacity: 1, duration: 0.6 }, '-=0.45')
+      .to(coords, { opacity: 1, duration: 0.8 }, '-=0.6');
+
+    // Performance Optimization: Pause rendering when off-screen
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            renderer.resume();
+          } else {
+            renderer.pause();
+          }
+        });
+      },
+      { threshold: 0 }, // Trigger as soon as 1px is visible or it fully leaves
+    );
+
+    const container = document.getElementById('globe-container');
+    if (container) observer.observe(container);
+
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        observer.disconnect();
+        renderer.destroy();
+      },
+      { once: true },
+    );
+  }
+</script>

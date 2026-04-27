@@ -1,0 +1,55 @@
+---
+import BaseHead from '@/components/common/BaseHead.astro';
+import Navbar from '@/components/ui/nav/Navbar.astro';
+import Footer from '@/components/ui/Footer.astro';
+
+import '@/styles/global.css';
+
+const { title, description, image, keywords } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={title} description={description} image={image} keywords={keywords} />
+  </head>
+  <body>
+    <div class="pointer-events-none fixed inset-0 z-[-1] flex justify-center" aria-hidden="true">
+      <div class="container mx-auto flex h-full w-full justify-between px-4">
+        <div class="h-full w-px border-l border-dashed border-black/10"></div>
+        <div class="hidden h-full w-px border-l border-dashed border-black/15 md:block"></div>
+        <div class="h-full w-px border-l border-dashed border-black/15"></div>
+        <div class="hidden h-full w-px border-l border-dashed border-black/15 md:block"></div>
+        <div class="h-full w-px border-r border-dashed border-black/15"></div>
+      </div>
+    </div>
+
+    <Navbar />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
+<script>
+  import Lenis from 'lenis';
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const lenis = new Lenis({
+    duration: 1.2,
+    easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    touchMultiplier: 2,
+  });
+
+  gsap.ticker.add((time) => {
+    lenis.raf(time * 1000);
+  });
+
+  gsap.ticker.lagSmoothing(0);
+  lenis.on('scroll', ScrollTrigger.update);
+
+  (window as any).lenis = lenis;
+</script>

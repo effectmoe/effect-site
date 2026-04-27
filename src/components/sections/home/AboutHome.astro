@@ -1,0 +1,137 @@
+---
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import { t } from '@/lib/utils';
+import { Image } from 'astro:assets';
+import aboutImage from '@/assets/about.webp';
+import GlobalPartners from '@/components/common/GlobalPartners.astro';
+---
+
+<section data-about="section" class="container mx-auto px-4 py-20 lg:py-28">
+  <!-- Top Row: Marquee + Title -->
+  <div class="grid grid-cols-1 space-y-3 md:space-y-5 lg:grid-cols-[3fr_4fr]">
+    <div class="space-y-3 md:space-y-5">
+      <div data-about="marquee" class="max-w-48 md:max-w-xs">
+        <MarqueeText text={t('index.about.marqueetext')} />
+      </div>
+      <h2 data-about="heading" class="font-clash text-4xl md:text-7xl">
+        {t('index.about.title')}
+      </h2>
+    </div>
+    <div class="mt-0 space-y-3 text-xl leading-snug font-normal uppercase md:space-y-5 md:text-3xl lg:mt-12">
+      <p data-about="desc1">
+        {t('index.about.description.one')}
+      </p>
+      <p data-about="desc2">
+        {t('index.about.description.two')}
+      </p>
+    </div>
+  </div>
+
+  <!-- Big Image Section -->
+  <div data-about="image-wrapper" class="bg-muted-foreground/80 mt-8 w-full overflow-hidden rounded-xl md:mt-20">
+    <Image
+      src={aboutImage}
+      alt={t('index.about.image.alt')}
+      class="aspect-4/3 w-full object-cover md:aspect-21/9"
+      data-about="image"
+    />
+  </div>
+  <div class="mt-6 md:mt-12">
+    <GlobalPartners />
+  </div>
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  let cleanupFn: (() => void) | null = null;
+
+  const initAboutSection = () => {
+    if (cleanupFn) {
+      cleanupFn();
+      cleanupFn = null;
+    }
+
+    const section = document.querySelector<HTMLElement>('[data-about="section"]');
+    if (!section) return;
+
+    const q = (attr: string) => section.querySelector<HTMLElement>(`[data-about="${attr}"]`);
+    const marquee = q('marquee');
+    const heading = q('heading');
+    const desc1 = q('desc1');
+    const desc2 = q('desc2');
+    const icon = q('icon');
+    const imageWrapper = q('image-wrapper');
+    const image = q('image');
+
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const ctx = gsap.context(() => {
+        // Initial fade up for text elements
+        const elements = [marquee, heading, desc1, desc2, icon].filter(Boolean) as HTMLElement[];
+        if (elements.length > 0) {
+          gsap.set(elements, { opacity: 0, y: 30 });
+        }
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 75%',
+            once: true,
+          },
+        });
+
+        if (marquee) tl.to(marquee, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
+        if (heading) tl.to(heading, { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.4');
+        if (desc1) tl.to(desc1, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.5');
+        if (desc2) tl.to(desc2, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.4');
+        if (icon) tl.to(icon, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.4');
+
+        // Image Wrapper Reveal
+        if (imageWrapper) {
+          gsap.fromTo(
+            imageWrapper,
+            { opacity: 0, y: 50 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 1,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: imageWrapper,
+                start: 'top 85%',
+                once: true,
+              },
+            },
+          );
+        }
+
+        // Image Parallax scroll inside wrapper
+        if (image && imageWrapper) {
+          gsap.fromTo(
+            image,
+            { yPercent: -10, scale: 1.1 },
+            {
+              yPercent: 10,
+              scale: 1.0,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: imageWrapper,
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: true,
+              },
+            },
+          );
+        }
+      }, section);
+
+      cleanupFn = () => ctx.revert();
+    }
+  };
+
+  initAboutSection();
+  document.addEventListener('astro:page-load', initAboutSection);
+</script>

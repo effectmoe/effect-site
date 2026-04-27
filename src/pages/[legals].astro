@@ -1,0 +1,27 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+
+export const prerender = true;
+
+export const getStaticPaths = (async () => {
+  const legals = await getCollection('legals');
+
+  return legals.map((legalPage) => ({
+    params: { legals: legalPage.id },
+    props: { legal: legalPage },
+  }));
+}) satisfies GetStaticPaths;
+
+const { legal } = Astro.props;
+const { Content } = await render(legal);
+---
+
+<Layout title={legal.data.title} description={legal.data.description}>
+  <div class="content-style px-4 py-8 md:py-16">
+    <article class="mx-auto max-w-6xl">
+      <Content />
+    </article>
+  </div>
+</Layout>
