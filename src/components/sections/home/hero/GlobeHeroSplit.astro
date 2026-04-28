@@ -136,19 +136,21 @@ import { t } from '@/lib/utils';
   };
 
   function expandChat() {
-    if (window.innerWidth >= 1024) return;
-
-    // Full-screen overlay
-    Object.assign(heroOuter.style, { position: 'fixed', inset: '0', zIndex: '50', overflow: 'hidden' });
+    // Full-screen overlay — centered column on desktop, full-width on mobile
+    Object.assign(heroOuter.style, {
+      position: 'fixed', inset: '0', zIndex: '50', overflow: 'hidden',
+      display: 'flex', justifyContent: 'center',
+    });
 
     // Hide globe and hero text
     globeEl.style.display  = 'none';
     heroText.style.display = 'none';
 
-    // Left panel fills viewport
+    // Left panel fills viewport (max-width centers it on wide screens)
     Object.assign(heroLeft.style, {
       height: '100dvh', paddingTop: '2.75rem',
       overflow: 'hidden', display: 'flex', flexDirection: 'column',
+      width: '100%', maxWidth: '680px',
     });
 
     // Show close row
@@ -157,10 +159,14 @@ import { t } from '@/lib/utils';
     // Expand chat wrapper and widget to fill panel
     const chatWrapper = document.getElementById('chat-wrapper');
     const aiChat      = document.getElementById('ai-chat');
+    const aiSpacer    = document.getElementById('ai-spacer');
     const aiMessages  = document.getElementById('ai-messages');
     if (chatWrapper) Object.assign(chatWrapper.style, { flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' });
-    if (aiChat) Object.assign(aiChat.style, { flex: '1', display: 'flex', flexDirection: 'column', overflowY: 'auto' });
-    if (aiMessages) Object.assign(aiMessages.style, { flex: '1', maxHeight: 'none' });
+    if (aiChat) Object.assign(aiChat.style, { flex: '1', display: 'flex', flexDirection: 'column' });
+    // Spacer grows → messages stay near the input (bottom-aligned feel)
+    if (aiSpacer) aiSpacer.style.flex = '1';
+    // Messages scroll internally; max-height adapts to viewport
+    if (aiMessages) Object.assign(aiMessages.style, { flex: '', maxHeight: 'calc(100dvh - 220px)', overflowY: 'auto' });
   }
 
   function collapseChat() {
@@ -168,6 +174,7 @@ import { t } from '@/lib/utils';
     Object.assign(heroOuter.style, {
       position: orig.outerPosition, inset: orig.outerInset,
       zIndex: orig.outerZIndex, overflow: orig.outerOverflow,
+      display: '', justifyContent: '',
     });
 
     // Restore visibility
@@ -179,14 +186,17 @@ import { t } from '@/lib/utils';
     Object.assign(heroLeft.style, {
       height: orig.leftHeight, paddingTop: orig.leftPaddingTop,
       overflow: orig.leftOverflow, display: orig.leftDisplay, flexDirection: orig.leftFlexDir,
+      width: '', maxWidth: '',
     });
 
     // Restore chat widget
     const chatWrapper = document.getElementById('chat-wrapper');
     const aiChat      = document.getElementById('ai-chat');
+    const aiSpacer    = document.getElementById('ai-spacer');
     const aiMessages  = document.getElementById('ai-messages');
     if (chatWrapper) Object.assign(chatWrapper.style, { flex: '', overflow: '', display: '', flexDirection: '' });
     if (aiChat) Object.assign(aiChat.style, { flex: '', display: '', flexDirection: '', overflowY: '' });
+    if (aiSpacer) aiSpacer.style.flex = '';
     if (aiMessages) Object.assign(aiMessages.style, { flex: '', maxHeight: '' });
   }
 
