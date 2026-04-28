@@ -38,6 +38,7 @@ async function fetchSafe(url: string, timeout = 6000): Promise<Response | null> 
     return await fetch(url, {
       signal: ctrl.signal,
       headers: { 'User-Agent': 'EFFECT-AI-Analyzer/1.0 (https://effect.moe)' },
+      cf: { cacheEverything: false } as any,
     });
   } catch {
     return null;
