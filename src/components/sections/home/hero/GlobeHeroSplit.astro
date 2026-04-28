@@ -13,7 +13,7 @@ import { t } from '@/lib/utils';
                     globe is absolute-positioned to fill the right half of whatever height hero-left creates
                     → eliminates the left-column whitespace caused by fixed height constraints
 -->
-<div id="hero-outer" class="relative flex w-full flex-col overflow-x-hidden lg:flex-row">
+<div id="hero-outer" class="relative flex w-full flex-col overflow-x-hidden pt-14 lg:flex-row lg:pt-0">
 
   <!-- Left Side: content drives the section height on desktop -->
   <div
@@ -31,7 +31,7 @@ import { t } from '@/lib/utils';
     </div>
 
     <!-- Hero text -->
-    <div id="hero-text-section" class="flex max-w-5xl flex-col gap-4 lg:gap-6">
+    <div id="hero-text-section" class="flex max-w-5xl flex-col gap-4 mt-3 lg:mt-0 lg:gap-6">
       <div id="hero-marquee-split" class="hidden xl:block" style="visibility: hidden;">
         <MarqueeText text={t('index.hero.marqueetext')} />
       </div>
