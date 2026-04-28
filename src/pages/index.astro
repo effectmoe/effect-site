@@ -7,21 +7,33 @@ import Services from '@/components/sections/home/service/Services.astro';
 import Process from '@/components/sections/home/process/Process.astro';
 import WorksHome from '@/components/sections/home/works-home/WorksHome.astro';
 import Testimonials from '@/components/sections/home/Testimonials.astro';
-import BlogsHome from '@/components/sections/home/blogs-home/BlogsHome.astro';
+import KnowledgeHome from '@/components/sections/home/blogs-home/KnowledgeHome.astro';
 import { t } from '@/lib/utils';
+
+const KNOWLEDGE_COUNT = 2; // ← この数字を変えるとホームの表示件数が変わる
 
 const projects = await getCollection('projects');
 const projectFilter = projects.filter((project) => project.data.featured).slice(0, 3);
 
-const BLOG_COUNT = 2; // ← この数字を変えるとホームの表示件数が変わる
-
-const blogs = await getCollection('blogs');
-const blogFilter = blogs.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+const knowledge = await getCollection('knowledge', ({ data }) => !data.draft);
+const articles = await getCollection('articles', ({ data }) => !data.draft);
+const allEntries = [
+  ...knowledge.map((e) => ({
+    id: e.id, href: `/knowledge/${e.id}`,
+    title: e.data.title, description: e.data.description, date: e.data.date,
+    category: e.data.category, tags: e.data.tags ?? [], heroImage: e.data.heroImage,
+  })),
+  ...articles.map((e) => ({
+    id: e.id, href: `/articles/${e.id}`,
+    title: e.data.title, description: e.data.description, date: e.data.date,
+    category: e.data.category, tags: e.data.tags ?? [], heroImage: e.data.heroImage,
+  })),
+].sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0));
 ---
 
 <Layout title={t('meta.index.title')} description={t('meta.index.description')} keywords={t('meta.index.keywords')}>
   <GlobeHeroSplit />
-  <BlogsHome blogs={blogFilter} count={BLOG_COUNT} />
+  <KnowledgeHome entries={allEntries} count={KNOWLEDGE_COUNT} />
   <AboutHome />
   <Services />
   <Process />

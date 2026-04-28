@@ -1,0 +1,83 @@
+---
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import ArticleCard from '@/components/sections/article/ArticleCard.astro';
+import Button from '@/components/ui/Button.astro';
+
+interface Entry {
+  id: string;
+  href: string;
+  title: string;
+  description?: string;
+  date?: Date;
+  category?: string;
+  tags?: string[];
+  heroImage?: string;
+}
+
+interface Props {
+  entries: Entry[];
+  count?: number;
+}
+
+const { entries, count = 2 } = Astro.props;
+const displayed = entries.slice(0, count);
+---
+
+<section data-knowledge-home="section" class="container mx-auto space-y-6 px-4 py-20 md:space-y-12 lg:py-28">
+  <div class="flex flex-col space-y-3 md:space-y-5">
+    <div data-knowledge-home="marquee">
+      <MarqueeText text="Knowledge & Insights" />
+    </div>
+    <div
+      data-knowledge-home="heading"
+      class="flex flex-col items-start justify-between space-y-3 md:flex-row md:items-center md:space-y-0"
+    >
+      <h2 class="font-clash max-w-6xl text-4xl md:text-7xl">
+        最新のナレッジ
+      </h2>
+      <Button href="/knowledge" variant="primary">
+        すべて見る
+      </Button>
+    </div>
+  </div>
+  <div data-knowledge-home="cards" class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    {displayed.map((entry) => (
+      <ArticleCard
+        id={entry.id}
+        href={entry.href}
+        title={entry.title}
+        description={entry.description}
+        date={entry.date}
+        category={entry.category}
+        tags={entry.tags}
+        heroImage={entry.heroImage}
+      />
+    ))}
+  </div>
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const section = document.querySelector('[data-knowledge-home="section"]');
+  if (section) {
+    const q = (attr: string) => section.querySelector(`[data-knowledge-home="${attr}"]`);
+
+    gsap.set([q('marquee'), q('heading'), q('cards')], { opacity: 0, y: 20 });
+
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: 'top 80%',
+          once: true,
+        },
+      })
+      .to(q('marquee'), { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' })
+      .to(q('heading'), { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.3')
+      .to(q('cards'), { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '-=0.4');
+  }
+</script>
