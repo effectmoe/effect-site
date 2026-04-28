@@ -106,18 +106,59 @@
     structuredData: '構造化データ',
   };
 
+  const MAX_SCORES: Record<string, number> = {
+    llmsTxt: 40, robotsTxt: 20, sitemapXml: 10, structuredData: 30, metaTags: 10,
+  };
+
+  const GRADE_DESCS: Record<string, string> = {
+    A: 'AI検索への対応が優秀です',
+    B: '概ね良好。改善の余地があります',
+    C: '基本的な対応が不足しています',
+    D: '重要な設定が欠けています',
+    F: 'AI検索への対応がほぼ未実施です',
+  };
+
   let lastUrl = '';
   let lastResult: any = null;
 
-  function checkItem(label: string, message: string, ok: boolean | null) {
+  function renderCheck(key: string, c: any) {
+    const max = MAX_SCORES[key] ?? 10;
+    const score = c.score ?? 0;
+    const ok = 'exists' in c ? c.exists : (c.schemasFound ?? c.score) > 0;
+    const dot = ok ? '✓' : '✗';
+    const dotColor = ok ? 'rgba(0,0,0,0.72)' : 'rgba(176,36,36,0.88)';
+    const scoreColor = ok ? 'rgba(0,0,0,0.32)' : 'rgba(176,36,36,0.72)';
+
+    let detail = c.message;
+    let sub = '';
+
+    if (key === 'llmsTxt' && c.exists) {
+      detail = `${c.entryCount}エントリ・${c.size}バイト検出`;
+      if (c.preview) sub = `"${c.preview.slice(0, 55)}${c.preview.length > 55 ? '…' : ''}"`;
+    }
+    if (key === 'robotsTxt' && c.exists && !c.aiAllowed && c.blockedBots?.length) {
+      sub = `ブロック中: ${c.blockedBots.join(', ')}`;
+    }
+    if (key === 'metaTags' && c.score > 0) {
+      detail = `タイトル ${c.title ? '✓' : '✗'} / 説明文 ${c.description ? '✓' : '✗'} / OGP ${c.hasOgp ? '✓' : '✗'}`;
+      if (c.title) sub = c.title.slice(0, 55) + (c.title.length > 55 ? '…' : '');
+    }
+    if (key === 'structuredData' && c.schemasFound > 0) {
+      const types = [...new Set((c.schemas ?? []).map((s: any) => s.type))].slice(0, 4).join(', ');
+      detail = `${c.schemasFound}件の構造化データを検出`;
+      sub = types;
+    }
+
     const li = document.createElement('li');
-    li.style.cssText = 'display:flex;align-items:baseline;gap:0.4rem;font-family:monospace;font-size:11px;line-height:1.6;';
-    const dot   = ok === null ? '·' : ok ? '✓' : '✗';
-    const color = ok === null ? 'rgba(0,0,0,0.45)' : ok ? 'rgba(0,0,0,0.80)' : 'rgba(180,40,40,0.85)';
+    li.style.cssText = 'padding:7px 0 8px;border-bottom:1px solid rgba(0,0,0,0.05);list-style:none;';
     li.innerHTML = `
-      <span style="color:${color};flex-shrink:0;width:1em;">${dot}</span>
-      <span style="color:rgba(0,0,0,0.50);flex-shrink:0;letter-spacing:.1em;text-transform:uppercase;">${label}</span>
-      <span style="color:rgba(0,0,0,0.68);">${message}</span>
+      <div style="display:flex;align-items:baseline;gap:5px;">
+        <span style="font-family:monospace;font-size:11px;color:${dotColor};flex-shrink:0;width:14px;">${dot}</span>
+        <span style="font-family:monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,0.50);flex:1;">${CHECK_LABELS[key] ?? key}</span>
+        <span style="font-family:monospace;font-size:10px;"><span style="color:${scoreColor};">${score}</span><span style="color:rgba(0,0,0,0.22);">/${max}</span></span>
+      </div>
+      <div style="font-family:monospace;font-size:11px;color:rgba(0,0,0,0.65);padding-left:19px;line-height:1.5;margin-top:2px;">${detail}</div>
+      ${sub ? `<div style="font-family:monospace;font-size:10px;color:rgba(0,0,0,0.42);padding-left:19px;margin-top:1px;line-height:1.4;">${sub}</div>` : ''}
     `;
     checksEl.appendChild(li);
   }
@@ -150,15 +191,12 @@
       const { score, grade, domain, checks } = data;
       scoreEl.textContent = String(score);
       gradeEl.textContent = grade;
-      domainEl.textContent = domain;
       gradeEl.style.color = score >= 80 ? '#1a7a1a' : score >= 60 ? '#7a6a00' : score >= 40 ? '#c05000' : '#c01010';
+      gradeDescEl.textContent = GRADE_DESCS[grade] ?? '';
+      domainEl.textContent = domain;
 
       const order = ['llmsTxt', 'robotsTxt', 'sitemapXml', 'structuredData', 'metaTags'];
-      for (const key of order) {
-        const c = checks[key];
-        const ok = 'exists' in c ? c.exists : (c.schemasFound ?? c.score) > 0;
-        checkItem(CHECK_LABELS[key] ?? key, c.message, ok);
-      }
+      for (const key of order) renderCheck(key, checks[key]);
 
       resultEl.classList.remove('hidden');
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
