@@ -2,6 +2,7 @@
 import MarqueeText from '@/components/common/MarqueeText.astro';
 import Button from '@/components/ui/Button.astro';
 import AiChatWidget from './AiChatWidget.astro';
+import LlmoDiagnosisWidget from './LlmoDiagnosisWidget.astro';
 import { t } from '@/lib/utils';
 ---
 
@@ -10,11 +11,17 @@ import { t } from '@/lib/utils';
   <!-- Left Side: Info -->
   <div
     id="hero-left"
-    class="bg-background relative z-10 order-2 flex w-full flex-col px-4 pb-6 pt-5 lg:order-1 lg:h-full lg:w-1/2 lg:gap-10 lg:px-14 lg:pt-16 lg:pb-14"
+    class="bg-background relative z-10 order-2 flex w-full flex-col px-4 pb-6 pt-5 lg:order-1 lg:h-full lg:w-1/2 lg:gap-6 lg:overflow-y-auto lg:px-14 lg:pt-16 lg:pb-14"
+    style="scrollbar-width: none;"
   >
     <!-- AI Chat -->
     <div id="chat-wrapper">
       <AiChatWidget />
+    </div>
+
+    <!-- LLMO Diagnosis Widget -->
+    <div id="diagnosis-wrapper">
+      <LlmoDiagnosisWidget />
     </div>
 
     <!-- Hero text -->
@@ -61,6 +68,11 @@ import { t } from '@/lib/utils';
   </div>
 </div>
 
+<style>
+  /* Hide scrollbar on hero-left while still allowing scroll */
+  #hero-left::-webkit-scrollbar { display: none; }
+</style>
+
 <script>
   import gsap from 'gsap';
   import { GlobeRenderer } from './globe.ts';
@@ -106,26 +118,24 @@ import { t } from '@/lib/utils';
     }, { once: true });
   }
 
-  // ── In-place chat expansion (globe collapses → chat fills that space) ──────
-  const heroOuter = document.getElementById('hero-outer')!;
-  const heroLeft  = document.getElementById('hero-left')!;
-  const heroText  = document.getElementById('hero-text-section')!;
-  const globeEl   = document.getElementById('globe-container')!;
-
-  let globeSavedH = 0;
+  // ── In-place chat expansion ──────────────────────────────────
+  const heroOuter      = document.getElementById('hero-outer')!;
+  const heroLeft       = document.getElementById('hero-left')!;
+  const heroText       = document.getElementById('hero-text-section')!;
+  const diagnosisEl    = document.getElementById('diagnosis-wrapper')!;
+  const globeEl        = document.getElementById('globe-container')!;
 
   function expandChat() {
-    // Fade globe out, THEN expand chat (avoids layout conflict during fade)
     gsap.to(globeEl, {
       opacity: 0, duration: 0.3, ease: 'power2.in',
       onComplete: () => {
-        globeEl.style.display = 'none';
+        globeEl.style.display   = 'none';
         gsap.set(globeEl, { clearProps: 'opacity' });
 
-        // Expand chat after globe is gone
-        heroText.style.display   = 'none';
-        heroOuter.style.height   = '100dvh';
-        heroOuter.style.overflow = 'hidden';
+        heroText.style.display      = 'none';
+        diagnosisEl.style.display   = 'none';
+        heroOuter.style.height      = '100dvh';
+        heroOuter.style.overflow    = 'hidden';
         Object.assign(heroLeft.style, {
           flex: '1', overflow: 'hidden',
           display: 'flex', flexDirection: 'column', width: '100%',
@@ -141,10 +151,10 @@ import { t } from '@/lib/utils';
   }
 
   function collapseChat() {
-    // 1. Restore layout immediately
-    heroOuter.style.height   = '';
-    heroOuter.style.overflow = '';
-    heroText.style.display   = '';
+    heroOuter.style.height      = '';
+    heroOuter.style.overflow    = '';
+    heroText.style.display      = '';
+    diagnosisEl.style.display   = '';
     Object.assign(heroLeft.style, {
       flex: '', overflow: '', display: '', flexDirection: '', width: '',
     });
@@ -155,31 +165,23 @@ import { t } from '@/lib/utils';
     if (aiChat)      Object.assign(aiChat.style,      { flex: '', display: '', flexDirection: '', overflowY: '' });
     if (aiMessages)  aiMessages.style.maxHeight = '';
 
-    // 2. Show globe at full CSS height (no height animation → canvas can be sized correctly)
     const globeCanvas = document.getElementById('globe-canvas-split') as HTMLCanvasElement | null;
     if (globeCanvas) {
       globeCanvas.style.width = ''; globeCanvas.style.height = '';
       globeCanvas.style.opacity = '1'; globeCanvas.style.visibility = 'visible';
     }
-    globeEl.style.display = '';         // full CSS height restored
-    gsap.set(globeEl, { opacity: 0 }); // invisible until canvas is ready
-
-    // 3. Fix canvas dimensions NOW that the element has real size
+    globeEl.style.display = '';
+    gsap.set(globeEl, { opacity: 0 });
     window.dispatchEvent(new Event('resize'));
-
-    // 4. Fade in after renderer has had a frame to redraw
     requestAnimationFrame(() => requestAnimationFrame(() => {
       gsap.to(globeEl, {
         opacity: 1, duration: 0.5, ease: 'power2.out',
         onComplete: () => gsap.set(globeEl, { clearProps: 'opacity' }),
       });
     }));
-
-    // 5. Reset conversation
     document.dispatchEvent(new CustomEvent('chat:clear'));
   }
 
   document.addEventListener('chat:started', expandChat);
   document.addEventListener('chat:reset',   collapseChat);
-  // ────────────────────────────────────────────────────────────
 </script>

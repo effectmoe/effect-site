@@ -1,4 +1,7 @@
-interface Env {}
+interface Env {
+  brain_knowledge: D1Database;
+  GAS_GMAIL_URL?: string;
+}
 
 const AI_BOTS = [
   'GPTBot', 'ChatGPT-User', 'CCBot', 'anthropic-ai', 'Claude-Web',
@@ -227,7 +230,7 @@ interface SchemaEntry {
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
-    const { url } = await context.request.json() as { url?: string };
+    const { url, email } = await context.request.json() as { url?: string; email?: string };
     if (!url?.trim()) return errRes('URLを入力してください', 400);
 
     let target: URL;
@@ -244,10 +247,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const score = Math.min(100,
       robots.score + llms.score + sitemap.score + page.metaTags.score + page.structuredData.score
     );
-
     const gradeLabel = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : score >= 20 ? 'D' : 'F';
 
-    return okRes({
+    const result = {
       url: target.toString(),
       domain: target.hostname,
       score,
@@ -259,7 +261,75 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         metaTags:       page.metaTags,
         structuredData: page.structuredData,
       },
-    });
+    };
+
+    // ── Save to D1 (fire-and-forget) ─────────────────────────
+    const id = crypto.randomUUID();
+    context.env.brain_knowledge.prepare(
+      `INSERT INTO diagnoses (id, url, domain, score, grade, result_json, email, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+    ).bind(
+      id,
+      target.toString(),
+      target.hostname,
+      score,
+      gradeLabel,
+      JSON.stringify(result),
+      email ?? null,
+    ).run().catch(() => null);
+
+    // ── Send email via GAS (only when email provided) ────────
+    if (email && context.env.GAS_GMAIL_URL) {
+      const checks = result.checks;
+      const lines = [
+        `LLMO 簡易診断レポート`,
+        `対象URL: ${target.toString()}`,
+        `診断日時: ${new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}`,
+        ``,
+        `総合スコア: ${score}/100 (${gradeLabel})`,
+        ``,
+        `【診断結果】`,
+        `llms.txt: ${checks.llmsTxt.message}`,
+        `robots.txt: ${checks.robotsTxt.message}`,
+        `sitemap.xml: ${checks.sitemapXml.message}`,
+        `メタタグ: ${checks.metaTags.message}`,
+        `構造化データ: ${checks.structuredData.message}`,
+        ``,
+        `※ この診断はページ単位（単一ページ）の簡易診断です。`,
+        `  詳細な改善提案・競合比較・全ページ分析は有料診断プランをご利用ください。`,
+        `  https://effect.moe/contact`,
+      ].join('\n');
+
+      const html = `<div style="font-family:monospace;font-size:13px;color:#333;max-width:600px;margin:0 auto;padding:32px;">
+  <p style="font-size:10px;letter-spacing:.1em;color:#999;text-transform:uppercase;margin-bottom:24px;">Effect AI — LLMO 簡易診断レポート</p>
+  <p style="margin-bottom:4px;">対象URL: <a href="${target.toString()}" style="color:#333;">${target.toString()}</a></p>
+  <p style="font-size:11px;color:#aaa;margin-bottom:24px;">${new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
+  <div style="font-size:32px;font-weight:bold;margin-bottom:4px;">${score}<span style="font-size:14px;font-weight:normal;color:#aaa;">/100</span> <span style="font-size:20px;">${gradeLabel}</span></div>
+  <hr style="border:none;border-top:1px solid #eee;margin:16px 0 20px;">
+  ${Object.entries(checks).map(([, c]: [string, any]) =>
+    `<p style="margin-bottom:8px;line-height:1.6;">${c.message}</p>`
+  ).join('')}
+  <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+  <p style="font-size:11px;color:#aaa;">※ この診断はページ単位（単一ページ）の簡易診断です。</p>
+  <p style="font-size:11px;color:#aaa;margin-top:4px;">詳細な改善提案・競合比較・全ページ分析は <a href="https://effect.moe/contact" style="color:#666;">有料診断プラン</a> をご利用ください。</p>
+  <p style="font-size:10px;color:#bbb;margin-top:24px;">effect.moe</p>
+</div>`;
+
+      fetch(context.env.GAS_GMAIL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_gmail',
+          to: email,
+          subject: `LLMO診断レポート: ${target.hostname}（${score}/100点）`,
+          body: lines,
+          html_body: html,
+          from_name: 'EFFECT AI',
+        }),
+      }).catch(() => null);
+    }
+
+    return okRes(result);
   } catch (e: any) {
     return errRes(e.message ?? '診断に失敗しました');
   }
