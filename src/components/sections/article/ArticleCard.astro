@@ -1,0 +1,61 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  description?: string;
+  date?: Date;
+  category?: string;
+  tags?: string[];
+  heroImage?: string;
+  href: string;
+}
+
+const { id, title, description, date, category, tags, heroImage, href } = Astro.props;
+
+const formattedDate = date ? new Date(date).toLocaleDateString('ja-JP', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+}) : '';
+---
+
+<a href={href} class="group bg-muted-foreground/30 flex w-full flex-col gap-0.5 p-0.5">
+  <div class="bg-primary-foreground relative aspect-video w-full overflow-hidden">
+    {heroImage ? (
+      <img
+        src={heroImage}
+        alt={title}
+        class="h-full w-full object-cover grayscale transition-all duration-600 group-hover:scale-105 group-hover:grayscale-0"
+        loading="lazy"
+      />
+    ) : (
+      <div class="bg-primary/5 flex h-full w-full items-center justify-center">
+        <span class="text-muted font-mono text-xs uppercase tracking-widest">No Image</span>
+      </div>
+    )}
+  </div>
+
+  <div class="bg-primary-foreground flex flex-1 flex-col justify-between space-y-4 p-6">
+    <div class="space-y-3">
+      {(category || (tags && tags.length > 0)) && (
+        <div class="text-primary-foreground bg-primary inline-block px-3 py-1 font-mono text-xs font-normal tracking-widest uppercase">
+          {category || tags![0]}
+        </div>
+      )}
+      <h3 class="text-xl font-semibold leading-snug md:text-2xl">
+        {title}
+      </h3>
+      {description && (
+        <p class="text-muted text-sm leading-relaxed md:text-base">
+          {description}
+        </p>
+      )}
+    </div>
+
+    {formattedDate && (
+      <div class="text-muted font-mono text-xs font-semibold tracking-widest uppercase">
+        {formattedDate}
+      </div>
+    )}
+  </div>
+</a>
