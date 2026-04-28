@@ -30,15 +30,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         `${m.role === 'user' ? '【あなた】' : '【EFFECT AI】'}\n${m.content}`
       ).join('\n\n');
 
-      const html = `<div style="font-family:monospace;font-size:13px;color:#333;max-width:600px;margin:0 auto;padding:32px;">
-  <p style="font-size:10px;letter-spacing:.1em;color:#999;text-transform:uppercase;margin-bottom:24px;">Effect AI — 会話ログ</p>
+      const html = `<div style="font-family:monospace;font-size:15px;color:#333;max-width:600px;margin:0 auto;padding:36px;">
+  <p style="font-size:12px;letter-spacing:.1em;color:#999;text-transform:uppercase;margin-bottom:28px;">Effect AI — 会話ログ</p>
   ${messages.map((m) => `
-  <div style="margin-bottom:20px;${m.role === 'user' ? 'text-align:right;' : ''}">
-    <span style="font-size:9px;letter-spacing:.1em;color:#bbb;text-transform:uppercase;display:block;margin-bottom:4px;">${m.role === 'user' ? 'YOU' : 'EFFECT AI'}</span>
-    <span style="color:${m.role === 'user' ? '#333' : '#777'};line-height:1.7;">${m.content.replace(/\n/g, '<br>')}</span>
+  <div style="margin-bottom:24px;${m.role === 'user' ? 'text-align:right;' : ''}">
+    <span style="font-size:11px;letter-spacing:.1em;color:#bbb;text-transform:uppercase;display:block;margin-bottom:5px;">${m.role === 'user' ? 'YOU' : 'EFFECT AI'}</span>
+    <span style="font-size:15px;color:${m.role === 'user' ? '#333' : '#666'};line-height:1.8;">${m.content.replace(/\n/g, '<br>')}</span>
   </div>`).join('')}
-  <hr style="border:none;border-top:1px solid #eee;margin:32px 0;">
-  <p style="font-size:10px;color:#bbb;">effect.moe</p>
+  <hr style="border:none;border-top:1px solid #eee;margin:36px 0;">
+  <p style="font-size:12px;color:#ccc;">effect.moe</p>
 </div>`;
 
       await fetch(env.GAS_GMAIL_URL, {

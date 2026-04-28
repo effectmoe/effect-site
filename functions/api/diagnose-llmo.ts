@@ -230,6 +230,36 @@ interface SchemaEntry {
   score: number;
 }
 
+// ── Email helpers ─────────────────────────────────────────────────
+
+const CHECK_LABELS_EMAIL: Record<string, string> = {
+  llmsTxt: 'llms.txt', robotsTxt: 'robots.txt', sitemapXml: 'sitemap.xml',
+  metaTags: 'メタタグ', structuredData: '構造化データ',
+};
+const MAX_SCORES_EMAIL: Record<string, number> = {
+  llmsTxt: 40, robotsTxt: 20, sitemapXml: 10, structuredData: 30, metaTags: 10,
+};
+
+function emailSymbol(key: string, c: any): { sym: string; color: string; scoreColor: string } {
+  const G = { sym: '○', color: '#1a7a1a',  scoreColor: '#aaa' };
+  const W = { sym: '△', color: '#8a6500',  scoreColor: '#8a6500' };
+  const B = { sym: '×', color: '#b52020',  scoreColor: '#b52020' };
+  switch (key) {
+    case 'llmsTxt':    return !c.exists ? B : c.entryCount >= 5 ? G : W;
+    case 'robotsTxt':  return !c.exists ? B : c.aiAllowed ? G : (c.blockedBots?.length ?? 0) < 4 ? W : B;
+    case 'sitemapXml': return c.exists ? G : B;
+    case 'metaTags': {
+      const n = [c.title, c.description, c.hasOgp].filter(Boolean).length;
+      return n === 3 ? G : n > 0 ? W : B;
+    }
+    case 'structuredData': {
+      if (!c.schemasFound) return B;
+      return (c.schemas ?? []).some((s: any) => s.issues?.some((i: any) => i.sev === 'error')) ? W : G;
+    }
+    default: return ('exists' in c ? c.exists : (c.schemasFound ?? c.score) > 0) ? G : B;
+  }
+}
+
 // ── Handler ───────────────────────────────────────────────────────
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
@@ -293,11 +323,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         `総合スコア: ${score}/100 (${gradeLabel})`,
         ``,
         `【診断結果】`,
-        `llms.txt: ${checks.llmsTxt.message}`,
-        `robots.txt: ${checks.robotsTxt.message}`,
-        `sitemap.xml: ${checks.sitemapXml.message}`,
-        `メタタグ: ${checks.metaTags.message}`,
-        `構造化データ: ${checks.structuredData.message}`,
+        ...(['llmsTxt','robotsTxt','sitemapXml','structuredData','metaTags'] as const).map(k => {
+          const { sym } = emailSymbol(k, checks[k]);
+          return `${sym} ${CHECK_LABELS_EMAIL[k]}: ${checks[k].message}`;
+        }),
         ``,
         `【この診断について】`,
         `この診断は GPTBot・PerplexityBot などの AI クローラーと同じ手法で、`,
@@ -311,23 +340,36 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         `  https://effect.moe/contact`,
       ].join('\n');
 
-      const html = `<div style="font-family:monospace;font-size:13px;color:#333;max-width:600px;margin:0 auto;padding:32px;">
-  <p style="font-size:10px;letter-spacing:.1em;color:#999;text-transform:uppercase;margin-bottom:24px;">Effect AI — LLMO 簡易診断レポート</p>
-  <p style="margin-bottom:4px;">対象URL: <a href="${target.toString()}" style="color:#333;">${target.toString()}</a></p>
-  <p style="font-size:11px;color:#aaa;margin-bottom:24px;">${new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
-  <div style="font-size:32px;font-weight:bold;margin-bottom:4px;">${score}<span style="font-size:14px;font-weight:normal;color:#aaa;">/100</span> <span style="font-size:20px;">${gradeLabel}</span></div>
-  <hr style="border:none;border-top:1px solid #eee;margin:16px 0 20px;">
-  ${Object.entries(checks).map(([, c]: [string, any]) =>
-    `<p style="margin-bottom:8px;line-height:1.6;">${c.message}</p>`
-  ).join('')}
-  <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
-  <div style="border-left:2px solid #e8e8e8;padding-left:12px;margin-bottom:20px;">
-    <p style="font-size:12px;color:#555;line-height:1.8;margin:0 0 6px;">この診断は GPTBot・PerplexityBot などの AI クローラーと同じ手法で、静的 HTML のみを解析しています。</p>
-    <p style="font-size:11px;color:#888;line-height:1.8;margin:0;">JavaScript で描画されるメタタグや構造化データは AI にも認識されないため、このスコアに正直に反映されます。スコアが低い場合、あなたのサイトは Google には見えていても、<strong style="color:#555;">AI には見えていない可能性があります。</strong></p>
+      const html = `<div style="font-family:monospace;font-size:15px;color:#333;max-width:600px;margin:0 auto;padding:36px;">
+  <p style="font-size:12px;letter-spacing:.1em;color:#999;text-transform:uppercase;margin-bottom:28px;">Effect AI — LLMO 簡易診断レポート</p>
+  <p style="font-size:15px;margin-bottom:4px;">対象URL: <a href="${target.toString()}" style="color:#333;">${target.toString()}</a></p>
+  <p style="font-size:13px;color:#aaa;margin-bottom:28px;">${new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
+  <div style="font-size:36px;font-weight:bold;margin-bottom:4px;">${score}<span style="font-size:16px;font-weight:normal;color:#aaa;">/100</span> <span style="font-size:22px;">${gradeLabel}</span></div>
+  <hr style="border:none;border-top:1px solid #eee;margin:18px 0 22px;">
+  ${(['llmsTxt','robotsTxt','sitemapXml','structuredData','metaTags'] as const).map(k => {
+    const c = checks[k];
+    const { sym, color, scoreColor } = emailSymbol(k, c);
+    const max = MAX_SCORES_EMAIL[k];
+    const sc = c.score ?? 0;
+    return `<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid #f0f0f0;">
+      <span style="font-size:17px;color:${color};flex-shrink:0;min-width:22px;line-height:1.4;">${sym}</span>
+      <div style="flex:1;">
+        <div style="margin-bottom:4px;">
+          <span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#999;">${CHECK_LABELS_EMAIL[k]}</span>
+          <span style="font-size:12px;color:${scoreColor};margin-left:8px;">${sc}/${max}</span>
+        </div>
+        <p style="font-size:14px;color:#555;line-height:1.7;margin:0;">${c.message}</p>
+      </div>
+    </div>`;
+  }).join('')}
+  <hr style="border:none;border-top:1px solid #eee;margin:22px 0;">
+  <div style="border-left:2px solid #e8e8e8;padding-left:14px;margin-bottom:22px;">
+    <p style="font-size:14px;color:#555;line-height:1.9;margin:0 0 8px;">この診断は GPTBot・PerplexityBot などの AI クローラーと同じ手法で、静的 HTML のみを解析しています。</p>
+    <p style="font-size:14px;color:#777;line-height:1.9;margin:0;">JavaScript で描画されるメタタグや構造化データは AI にも認識されないため、このスコアに正直に反映されます。スコアが低い場合、あなたのサイトは Google には見えていても、<strong style="color:#444;">AI には見えていない可能性があります。</strong></p>
   </div>
-  <p style="font-size:11px;color:#aaa;">※ この診断はページ単位（単一ページ）の簡易診断です。</p>
-  <p style="font-size:11px;color:#aaa;margin-top:4px;">詳細な改善提案・競合比較・全ページ分析は <a href="https://effect.moe/contact" style="color:#666;">有料診断プラン</a> をご利用ください。</p>
-  <p style="font-size:10px;color:#bbb;margin-top:24px;">effect.moe</p>
+  <p style="font-size:13px;color:#aaa;">※ この診断はページ単位（単一ページ）の簡易診断です。</p>
+  <p style="font-size:13px;color:#aaa;margin-top:6px;">詳細な改善提案・競合比較・全ページ分析は <a href="https://effect.moe/contact" style="color:#555;">有料診断プラン</a> をご利用ください。</p>
+  <p style="font-size:12px;color:#ccc;margin-top:28px;">effect.moe</p>
 </div>`;
 
       await fetch(context.env.GAS_GMAIL_URL, {
