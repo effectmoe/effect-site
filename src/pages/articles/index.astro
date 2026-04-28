@@ -1,41 +1,26 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
-import MarqueeText from '@/components/common/MarqueeText.astro';
-import ArticleCard from '@/components/sections/article/ArticleCard.astro';
+import ArticleListContent from '@/components/sections/article/ArticleListContent.astro';
 
-const entries = await getCollection('articles', ({ data }) => !data.draft);
-const sorted = entries.sort((a, b) => {
-  const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
-  const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
-  return dateB - dateA;
-});
+const raw = await getCollection('articles', ({ data }) => !data.draft);
+const entries = raw.map((e) => ({
+  id: e.id,
+  href: `/articles/${e.id}`,
+  title: e.data.title,
+  description: e.data.description,
+  date: e.data.date,
+  category: e.data.category,
+  tags: e.data.tags,
+  heroImage: e.data.heroImage,
+}));
 ---
 
 <Layout title="記事 — EFFECT" description="AIとデジタル戦略に関する記事">
-  <section class="container mx-auto space-y-6 px-4 pt-24 pb-20 md:space-y-12 lg:pt-36 lg:pb-28">
-    <div class="max-w-5xl space-y-3 md:space-y-5">
-      <MarqueeText text="Articles" />
-      <h1 class="font-clash text-4xl md:text-7xl lg:text-8xl">
-        記事
-      </h1>
-      <p class="font-grotesk max-w-3xl text-lg leading-relaxed md:text-2xl">
-        デジタル戦略とAI活用に関する実践的な記事を公開しています。
-      </p>
-    </div>
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-      {sorted.map((entry) => (
-        <ArticleCard
-          id={entry.id}
-          href={`/articles/${entry.id}`}
-          title={entry.data.title}
-          description={entry.data.description}
-          date={entry.data.date}
-          category={entry.data.category}
-          tags={entry.data.tags}
-          heroImage={entry.data.heroImage}
-        />
-      ))}
-    </div>
-  </section>
+  <ArticleListContent
+    entries={entries}
+    pageTitle="記事"
+    marqueeText="Articles"
+    pageDescription="デジタル戦略とAI活用に関する実践的な記事を公開しています。"
+  />
 </Layout>

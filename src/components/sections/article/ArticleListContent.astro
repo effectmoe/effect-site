@@ -1,0 +1,193 @@
+---
+import MarqueeText from '@/components/common/MarqueeText.astro';
+import ArticleCard from './ArticleCard.astro';
+
+interface Entry {
+  id: string;
+  title: string;
+  description?: string;
+  date?: Date;
+  category?: string;
+  tags?: string[];
+  heroImage?: string;
+  href: string;
+}
+
+interface Props {
+  entries: Entry[];
+  pageTitle: string;
+  marqueeText: string;
+  pageDescription: string;
+}
+
+const { entries, pageTitle, marqueeText, pageDescription } = Astro.props;
+
+// Collect all unique tags across all entries
+const allTags = [...new Set(entries.flatMap((e) => e.tags ?? []))].sort();
+---
+
+<section class="container mx-auto space-y-8 px-4 pt-24 pb-20 lg:pt-36 lg:pb-28">
+  <!-- Page header -->
+  <div class="max-w-5xl space-y-3 md:space-y-5">
+    <MarqueeText text={marqueeText} />
+    <h1 class="font-clash text-4xl md:text-7xl lg:text-8xl">{pageTitle}</h1>
+    <p class="font-grotesk max-w-3xl text-lg leading-relaxed md:text-2xl">{pageDescription}</p>
+  </div>
+
+  <!-- Filter controls -->
+  <div class="space-y-4">
+    <!-- Search + Sort row -->
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div class="relative flex-1">
+        <svg
+          class="text-muted absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+        <input
+          id="article-search"
+          type="search"
+          placeholder="タイトル・説明で検索..."
+          class="bg-primary-foreground border-muted-foreground/30 focus:border-primary w-full border py-2.5 pr-4 pl-9 font-mono text-sm outline-none transition-colors"
+        />
+      </div>
+      <select
+        id="article-sort"
+        class="bg-primary-foreground border-muted-foreground/30 focus:border-primary border px-4 py-2.5 font-mono text-sm outline-none transition-colors sm:w-48"
+      >
+        <option value="default">並び順: デフォルト</option>
+        <option value="newest">新着順</option>
+        <option value="oldest">古い順</option>
+      </select>
+    </div>
+
+    <!-- Tag filter chips -->
+    <div class="flex flex-wrap gap-2" id="tag-filters">
+      <button
+        data-tag="all"
+        class="tag-btn active border px-3 py-1.5 font-mono text-xs tracking-widest uppercase transition-colors"
+      >
+        すべて
+      </button>
+      {allTags.map((tag) => (
+        <button
+          data-tag={tag}
+          class="tag-btn border px-3 py-1.5 font-mono text-xs tracking-widest uppercase transition-colors"
+        >
+          {tag}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <!-- Article grid -->
+  <div id="article-grid" class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    {entries.map((entry) => (
+      <div
+        class="article-item"
+        data-tags={JSON.stringify(entry.tags ?? [])}
+        data-date={entry.date ? new Date(entry.date).toISOString() : ''}
+        data-title={entry.title.toLowerCase()}
+        data-description={(entry.description ?? '').toLowerCase()}
+      >
+        <ArticleCard
+          id={entry.id}
+          href={entry.href}
+          title={entry.title}
+          description={entry.description}
+          date={entry.date}
+          category={entry.category}
+          tags={entry.tags}
+          heroImage={entry.heroImage}
+        />
+      </div>
+    ))}
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state" class="hidden py-20 text-center">
+    <p class="text-muted font-mono text-sm uppercase tracking-widest">記事が見つかりません</p>
+  </div>
+</section>
+
+<style>
+  .tag-btn {
+    border-color: color-mix(in srgb, var(--color-muted-foreground) 40%, transparent);
+    background-color: var(--color-primary-foreground);
+    color: var(--color-foreground);
+  }
+  .tag-btn:hover,
+  .tag-btn.active {
+    background-color: var(--color-primary);
+    color: var(--color-primary-foreground);
+    border-color: var(--color-primary);
+  }
+</style>
+
+<script>
+  const searchInput = document.getElementById('article-search') as HTMLInputElement;
+  const sortSelect = document.getElementById('article-sort') as HTMLSelectElement;
+  const tagBtns = document.querySelectorAll<HTMLButtonElement>('.tag-btn');
+  const grid = document.getElementById('article-grid')!;
+  const emptyState = document.getElementById('empty-state')!;
+
+  let activeTag = 'all';
+
+  function getItems() {
+    return Array.from(grid.querySelectorAll<HTMLElement>('.article-item'));
+  }
+
+  function applyFilters() {
+    const query = searchInput.value.toLowerCase().trim();
+    const sort = sortSelect.value;
+    const items = getItems();
+
+    // Filter
+    const visible = items.filter((item) => {
+      const tags: string[] = JSON.parse(item.dataset.tags ?? '[]');
+      const title = item.dataset.title ?? '';
+      const desc = item.dataset.description ?? '';
+
+      const tagMatch = activeTag === 'all' || tags.some((t) => t === activeTag);
+      const searchMatch = !query || title.includes(query) || desc.includes(query);
+      return tagMatch && searchMatch;
+    });
+
+    const hidden = items.filter((item) => !visible.includes(item));
+
+    // Sort visible
+    if (sort !== 'default') {
+      visible.sort((a, b) => {
+        const da = a.dataset.date ? new Date(a.dataset.date).getTime() : 0;
+        const db = b.dataset.date ? new Date(b.dataset.date).getTime() : 0;
+        return sort === 'newest' ? db - da : da - db;
+      });
+      visible.forEach((el) => grid.appendChild(el));
+    }
+
+    // Show/hide
+    visible.forEach((el) => el.classList.remove('hidden'));
+    hidden.forEach((el) => el.classList.add('hidden'));
+    emptyState.classList.toggle('hidden', visible.length > 0);
+  }
+
+  // Tag click
+  tagBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeTag = btn.dataset.tag ?? 'all';
+      tagBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    });
+  });
+
+  // Search
+  searchInput.addEventListener('input', applyFilters);
+
+  // Sort
+  sortSelect.addEventListener('change', applyFilters);
+</script>
