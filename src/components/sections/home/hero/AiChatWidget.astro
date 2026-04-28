@@ -39,12 +39,18 @@
     <button id="ai-send" aria-label="送信" class="font-mono text-xs text-black/30 transition-colors hover:text-black">→</button>
   </div>
 
-  <!-- Email: trigger button shown after first response, expands on click -->
+  <!-- Action row: shown after first response -->
   <div id="ai-email-trigger" class="mt-4 hidden">
-    <button id="ai-email-open"
-      class="inline-flex items-center gap-1.5 border border-black/20 px-3 py-1.5 font-mono text-[10px] tracking-widest text-black/55 uppercase transition-all hover:border-black/40 hover:text-black/80">
-      ログをメールで受け取る <span class="text-black/30">→</span>
-    </button>
+    <div class="flex flex-wrap items-center gap-4">
+      <button id="ai-email-open"
+        class="inline-flex items-center gap-1.5 border border-black/20 px-3 py-1.5 font-mono text-[10px] tracking-widest text-black/55 uppercase transition-all hover:border-black/40 hover:text-black/80">
+        ログをメールで受け取る <span class="text-black/30">→</span>
+      </button>
+      <button id="ai-clear-btn"
+        class="font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">
+        × クリアする
+      </button>
+    </div>
   </div>
   <div id="ai-email-section" class="mt-3 hidden">
     <div class="flex items-center gap-2 border-b border-black/20 pb-2">
@@ -95,6 +101,7 @@
   const greetingEl    = document.getElementById('ai-greeting')!;
   const emailTrigger   = document.getElementById('ai-email-trigger')!;
   const emailOpenBtn   = document.getElementById('ai-email-open')!;
+  const clearBtn       = document.getElementById('ai-clear-btn')!;
   const emailSection   = document.getElementById('ai-email-section')!;
   const emailInput     = document.getElementById('ai-email-input') as HTMLInputElement;
   const emailSendBtn   = document.getElementById('ai-email-send-btn')!;
@@ -264,6 +271,11 @@
       emailInput.disabled = false;
     }
   }
+
+  // Clear button → restore globe, reset conversation
+  clearBtn.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('chat:reset'));
+  });
 
   emailSendBtn.addEventListener('click', sendEmailLog);
   emailInput.addEventListener('keydown', (e) => {
