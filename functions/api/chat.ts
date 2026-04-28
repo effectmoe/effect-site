@@ -30,7 +30,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       return new Response(JSON.stringify({ error: 'メッセージが空です' }), { status: 400 });
     }
 
-    // D1から関連コンテンツをFTS検索
+    // D1から関連コンテンツをFTS検索（日本語対応: 空白区切りで検索）
     const searchTerms = message.replace(/[^\p{L}\p{N}\s]/gu, ' ').trim();
     const ftsResult = await env.brain_knowledge.prepare(`
       SELECT a.id, a.collection, a.title, a.description, a.content, a.category, a.tags, a.date
@@ -46,9 +46,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       ? ftsResult.results
       : (await env.brain_knowledge.prepare(
           'SELECT id, collection, title, description, content, category, tags, date FROM articles WHERE draft=0 ORDER BY date DESC LIMIT 3'
-        ).all()).results;
+        ).all().catch(() => ({ results: [] }))).results;
 
-    // 構造化コンテキスト構築（D1の構造化データをそのまま渡す）
+    // 構造化コンテキスト構築
     const context_str = rows.map((r: any) => [
       `## ${r.title}`,
       r.category ? `カテゴリ: ${r.category}` : '',
@@ -59,7 +59,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     ].filter(Boolean).join('\n')).join('\n\n---\n\n');
 
     // 会話履歴 + 現在のメッセージ構築
-    const messages: RoleScopedChatInput[] = [
+    const messages: { role: string; content: string }[] = [
       ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
       {
         role: 'user',
@@ -69,12 +69,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       },
     ];
 
-    // Workers AI 呼び出し（ストリーミング）
-    const aiResponse = await env.AI.run('@cf/qwen/qwen1.5-14b-chat-awq', {
+    // Workers AI 呼び出し（ストリーミング）— Llama 3.1 8B は無料枠で安定稼働
+    const aiResponse = await (env.AI.run as any)('@cf/meta/llama-3.1-8b-instruct', {
       messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
       stream: true,
       max_tokens: 512,
-    } as any);
+    });
 
     return new Response(aiResponse as ReadableStream, {
       headers: {
@@ -84,7 +84,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       },
     });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: err.message ?? 'Unknown error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
