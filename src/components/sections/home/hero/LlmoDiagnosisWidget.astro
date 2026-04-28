@@ -36,12 +36,12 @@
       <span id="dw-score" class="font-clash text-5xl leading-none">—</span>
       <div class="flex flex-col ml-1 gap-0.5 pt-1">
         <div class="flex items-baseline gap-1.5">
-          <span class="font-mono text-[10px] text-black/30">/100</span>
-          <span id="dw-grade" class="font-mono text-sm font-bold"></span>
+          <span class="font-mono text-xs text-black/30">/100</span>
+          <span id="dw-grade" class="font-mono text-base font-bold"></span>
         </div>
-        <span id="dw-grade-desc" class="font-mono text-[10px] text-black/45 leading-snug"></span>
+        <span id="dw-grade-desc" class="font-mono text-[11px] text-black/50 leading-snug"></span>
       </div>
-      <span id="dw-domain" class="font-mono text-[9px] text-black/30 ml-auto truncate max-w-[120px] pt-1"></span>
+      <span id="dw-domain" class="font-mono text-[10px] text-black/35 ml-auto truncate max-w-[120px] pt-1"></span>
     </div>
 
     <!-- Check rows -->
@@ -49,10 +49,10 @@
 
     <!-- AI crawler note -->
     <div class="mt-4 border-l-2 border-black/10 pl-3">
-      <p class="font-mono text-[10px] leading-relaxed text-black/50">
+      <p class="font-mono text-xs leading-relaxed text-black/55">
         この診断は GPTBot・PerplexityBot などの AIクローラーと同じ手法で、静的 HTML のみを解析しています。
       </p>
-      <p class="mt-1 font-mono text-[10px] leading-relaxed text-black/40">
+      <p class="mt-1.5 font-mono text-xs leading-relaxed text-black/45">
         JavaScript で描画されるメタタグや構造化データは AI にも認識されないため、このスコアに正直に反映されます。スコアが低い場合、あなたのサイトは Google には見えていても、AI には見えていない可能性があります。
       </p>
     </div>
@@ -131,13 +131,41 @@
   let lastUrl = '';
   let lastResult: any = null;
 
+  function getSymbol(key: string, c: any): { sym: string; color: string; scoreColor: string } {
+    const G = { sym: '○', color: 'rgba(0,110,0,0.82)',    scoreColor: 'rgba(0,0,0,0.32)' };
+    const W = { sym: '△', color: 'rgba(155,105,0,0.88)', scoreColor: 'rgba(155,105,0,0.75)' };
+    const B = { sym: '×', color: 'rgba(176,36,36,0.88)',  scoreColor: 'rgba(176,36,36,0.72)' };
+    switch (key) {
+      case 'llmsTxt':
+        if (!c.exists) return B;
+        if (c.entryCount >= 5) return G;
+        return W;
+      case 'robotsTxt':
+        if (!c.exists) return B;
+        if (c.aiAllowed) return G;
+        return (c.blockedBots?.length ?? 0) < 4 ? W : B;
+      case 'sitemapXml':
+        return c.exists ? G : B;
+      case 'metaTags': {
+        const n = [c.title, c.description, c.hasOgp].filter(Boolean).length;
+        if (n === 3) return G;
+        if (n > 0)  return W;
+        return B;
+      }
+      case 'structuredData': {
+        if (!c.schemasFound) return B;
+        const hasErr = (c.schemas ?? []).some((s: any) => s.issues?.some((i: any) => i.sev === 'error'));
+        return hasErr ? W : G;
+      }
+      default:
+        return ('exists' in c ? c.exists : (c.schemasFound ?? c.score) > 0) ? G : B;
+    }
+  }
+
   function renderCheck(key: string, c: any) {
     const max = MAX_SCORES[key] ?? 10;
     const score = c.score ?? 0;
-    const ok = 'exists' in c ? c.exists : (c.schemasFound ?? c.score) > 0;
-    const dot = ok ? '✓' : '✗';
-    const dotColor = ok ? 'rgba(0,0,0,0.72)' : 'rgba(176,36,36,0.88)';
-    const scoreColor = ok ? 'rgba(0,0,0,0.32)' : 'rgba(176,36,36,0.72)';
+    const { sym, color: dotColor, scoreColor } = getSymbol(key, c);
 
     let detail = c.message;
     let sub = '';
@@ -160,15 +188,15 @@
     }
 
     const li = document.createElement('li');
-    li.style.cssText = 'padding:7px 0 8px;border-bottom:1px solid rgba(0,0,0,0.05);list-style:none;';
+    li.style.cssText = 'padding:8px 0 9px;border-bottom:1px solid rgba(0,0,0,0.05);list-style:none;';
     li.innerHTML = `
-      <div style="display:flex;align-items:baseline;gap:5px;">
-        <span style="font-family:monospace;font-size:11px;color:${dotColor};flex-shrink:0;width:14px;">${dot}</span>
-        <span style="font-family:monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,0.50);flex:1;">${CHECK_LABELS[key] ?? key}</span>
-        <span style="font-family:monospace;font-size:10px;"><span style="color:${scoreColor};">${score}</span><span style="color:rgba(0,0,0,0.22);">/${max}</span></span>
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <span style="font-size:13px;color:${dotColor};flex-shrink:0;width:18px;line-height:1;">${sym}</span>
+        <span style="font-family:monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(0,0,0,0.55);flex:1;">${CHECK_LABELS[key] ?? key}</span>
+        <span style="font-family:monospace;font-size:11px;"><span style="color:${scoreColor};">${score}</span><span style="color:rgba(0,0,0,0.25);">/${max}</span></span>
       </div>
-      <div style="font-family:monospace;font-size:11px;color:rgba(0,0,0,0.65);padding-left:19px;line-height:1.5;margin-top:2px;">${detail}</div>
-      ${sub ? `<div style="font-family:monospace;font-size:10px;color:rgba(0,0,0,0.42);padding-left:19px;margin-top:1px;line-height:1.4;">${sub}</div>` : ''}
+      <div style="font-family:monospace;font-size:12px;color:rgba(0,0,0,0.68);padding-left:24px;line-height:1.6;margin-top:3px;">${detail}</div>
+      ${sub ? `<div style="font-family:monospace;font-size:11px;color:rgba(0,0,0,0.45);padding-left:24px;margin-top:2px;line-height:1.5;">${sub}</div>` : ''}
     `;
     checksEl.appendChild(li);
   }
