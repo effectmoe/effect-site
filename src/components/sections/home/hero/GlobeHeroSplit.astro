@@ -144,9 +144,12 @@ import { t } from '@/lib/utils';
     // Lock hero outer to viewport height and expand heroLeft to fill it
     heroOuter.style.height   = '100dvh';
     heroOuter.style.overflow = 'hidden';
+    // Add padding so close row clears the fixed navbar (z-40)
+    const navH = (document.querySelector('nav') as HTMLElement | null)?.getBoundingClientRect().height ?? 56;
     Object.assign(heroLeft.style, {
       flex: '1', overflow: 'hidden',
       display: 'flex', flexDirection: 'column', width: '100%',
+      paddingTop: `calc(${navH}px + 0.75rem)`,
     });
 
     // Expand chat widget to fill the panel
@@ -163,7 +166,7 @@ import { t } from '@/lib/utils';
     heroOuter.style.height   = '';
     heroOuter.style.overflow = '';
     Object.assign(heroLeft.style, {
-      flex: '', overflow: '', display: '', flexDirection: '', width: '',
+      flex: '', overflow: '', display: '', flexDirection: '', width: '', paddingTop: '',
     });
 
     // Restore hero text; hide clear row
