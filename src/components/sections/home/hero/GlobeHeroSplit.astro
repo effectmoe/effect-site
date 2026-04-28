@@ -115,46 +115,39 @@ import { t } from '@/lib/utils';
   let globeSavedH = 0;
 
   function expandChat() {
-    globeSavedH = globeEl.getBoundingClientRect().height;
-
-    // Collapse globe in-place
-    globeEl.style.overflow = 'hidden';
+    // Fade globe out, THEN expand chat (avoids layout conflict during fade)
     gsap.to(globeEl, {
-      height: 0, opacity: 0, duration: 0.4, ease: 'power2.in',
+      opacity: 0, duration: 0.3, ease: 'power2.in',
       onComplete: () => {
         globeEl.style.display = 'none';
-        gsap.set(globeEl, { clearProps: 'height,opacity,overflow' });
+        gsap.set(globeEl, { clearProps: 'opacity' });
+
+        // Expand chat after globe is gone
+        heroText.style.display   = 'none';
+        heroOuter.style.height   = '100dvh';
+        heroOuter.style.overflow = 'hidden';
+        Object.assign(heroLeft.style, {
+          flex: '1', overflow: 'hidden',
+          display: 'flex', flexDirection: 'column', width: '100%',
+        });
+        const chatWrapper = document.getElementById('chat-wrapper');
+        const aiChat      = document.getElementById('ai-chat');
+        const aiMessages  = document.getElementById('ai-messages');
+        if (chatWrapper) Object.assign(chatWrapper.style, { flex: '1', display: 'flex', flexDirection: 'column', overflow: 'hidden' });
+        if (aiChat)      Object.assign(aiChat.style,      { flex: '1', display: 'flex', flexDirection: 'column', overflowY: 'auto' });
+        if (aiMessages)  aiMessages.style.maxHeight = 'none';
       },
     });
-
-    // Hide hero text; lock hero height; expand heroLeft
-    heroText.style.display   = 'none';
-    heroOuter.style.height   = '100dvh';
-    heroOuter.style.overflow = 'hidden';
-    Object.assign(heroLeft.style, {
-      flex: '1', overflow: 'hidden',
-      display: 'flex', flexDirection: 'column', width: '100%',
-    });
-
-    // Expand chat widget
-    const chatWrapper = document.getElementById('chat-wrapper');
-    const aiChat      = document.getElementById('ai-chat');
-    const aiMessages  = document.getElementById('ai-messages');
-    if (chatWrapper) Object.assign(chatWrapper.style, { flex: '1', display: 'flex', flexDirection: 'column', overflow: 'hidden' });
-    if (aiChat)      Object.assign(aiChat.style,      { flex: '1', display: 'flex', flexDirection: 'column', overflowY: 'auto' });
-    if (aiMessages)  aiMessages.style.maxHeight = 'none';
   }
 
   function collapseChat() {
-    // Restore layout
+    // 1. Restore layout immediately
     heroOuter.style.height   = '';
     heroOuter.style.overflow = '';
     heroText.style.display   = '';
     Object.assign(heroLeft.style, {
       flex: '', overflow: '', display: '', flexDirection: '', width: '',
     });
-
-    // Restore chat widget
     const chatWrapper = document.getElementById('chat-wrapper');
     const aiChat      = document.getElementById('ai-chat');
     const aiMessages  = document.getElementById('ai-messages');
@@ -162,22 +155,27 @@ import { t } from '@/lib/utils';
     if (aiChat)      Object.assign(aiChat.style,      { flex: '', display: '', flexDirection: '', overflowY: '' });
     if (aiMessages)  aiMessages.style.maxHeight = '';
 
-    // Restore globe
+    // 2. Show globe at full CSS height (no height animation → canvas can be sized correctly)
     const globeCanvas = document.getElementById('globe-canvas-split') as HTMLCanvasElement | null;
     if (globeCanvas) {
       globeCanvas.style.width = ''; globeCanvas.style.height = '';
       globeCanvas.style.opacity = '1'; globeCanvas.style.visibility = 'visible';
     }
-    gsap.set(globeEl, { display: '', height: 0, opacity: 0, overflow: 'hidden' });
-    gsap.to(globeEl, {
-      height: globeSavedH || '56vw', opacity: 1, duration: 0.45, ease: 'power2.out',
-      onComplete: () => {
-        gsap.set(globeEl, { clearProps: 'height,opacity,overflow' });
-        window.dispatchEvent(new Event('resize'));
-      },
-    });
+    globeEl.style.display = '';         // full CSS height restored
+    gsap.set(globeEl, { opacity: 0 }); // invisible until canvas is ready
 
-    // Reset conversation
+    // 3. Fix canvas dimensions NOW that the element has real size
+    window.dispatchEvent(new Event('resize'));
+
+    // 4. Fade in after renderer has had a frame to redraw
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      gsap.to(globeEl, {
+        opacity: 1, duration: 0.5, ease: 'power2.out',
+        onComplete: () => gsap.set(globeEl, { clearProps: 'opacity' }),
+      });
+    }));
+
+    // 5. Reset conversation
     document.dispatchEvent(new CustomEvent('chat:clear'));
   }
 
