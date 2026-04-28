@@ -199,7 +199,7 @@ const DEFAULT_CONFIG: GlobeConfig = {
   lineH: 1.25,
   rotSpeed: 0.0028,
   tilt: 0.38,
-  globeRadius: 0.40,
+  globeRadius: 0.46,
   colors: {
     bg:    "#eeebe4",
     grid:  "#c2bfb8",
@@ -320,7 +320,7 @@ export class GlobeRenderer {
     state.cols = Math.ceil(w / cw) + 2;
     state.rows = Math.ceil(h / ch) + 2;
     state.cx   = w / 2;
-    state.cy   = isMobile ? h * 0.5 : h * 0.45;
+    state.cy   = isMobile ? h * 0.5 : h * 0.44;
     state.r    = Math.min(w, h) * (isMobile ? 0.40 : cfg.globeRadius);
 
     this.preRenderGrid(w, h, dpr);
