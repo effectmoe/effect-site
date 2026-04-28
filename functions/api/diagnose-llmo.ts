@@ -315,7 +315,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   <p style="font-size:10px;color:#bbb;margin-top:24px;">effect.moe</p>
 </div>`;
 
-      fetch(context.env.GAS_GMAIL_URL, {
+      await fetch(context.env.GAS_GMAIL_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

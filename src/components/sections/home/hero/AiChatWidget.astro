@@ -15,16 +15,16 @@
 
   <!-- Initial greeting (hidden once chat starts) -->
   <div id="ai-greeting" class="mt-1">
-    <p class="font-mono text-xs leading-[1.8] text-black/40">
+    <p class="font-mono text-xs leading-[1.8] text-black/65">
       LLMO（AI検索対策）・AI・Notionついてご質問ください。
     </p>
   </div>
 
   <!-- Suggestions -->
   <div id="ai-suggestions" class="mt-3 flex flex-wrap gap-x-3 gap-y-1 lg:mt-4 lg:gap-x-4">
-    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">LLMOとは？</button>
-    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">EFFECTに依頼するには</button>
-    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">AIコンテンツ戦略</button>
+    <button class="ai-suggestion font-mono text-[11px] tracking-widest text-black/45 uppercase transition-colors hover:text-black">LLMOとは？</button>
+    <button class="ai-suggestion font-mono text-[11px] tracking-widest text-black/45 uppercase transition-colors hover:text-black">EFFECTに依頼するには</button>
+    <button class="ai-suggestion font-mono text-[11px] tracking-widest text-black/45 uppercase transition-colors hover:text-black">AIコンテンツ戦略</button>
   </div>
 
   <!-- Input (single border line only) -->
@@ -75,9 +75,9 @@
     #ai-chat { padding-bottom: 1rem; margin-bottom: 1.25rem; }
   }
 
-  .ai-msg[data-role="user"] p { color: rgba(0,0,0,0.75); text-align: right; }
+  .ai-msg[data-role="user"] p { color: rgba(0,0,0,0.82); text-align: right; }
   .ai-msg[data-role="user"] { display: flex; justify-content: flex-end; }
-  .ai-msg[data-role="assistant"] p { color: rgba(0,0,0,0.45); }
+  .ai-msg[data-role="assistant"] p { color: rgba(0,0,0,0.68); }
 
   .typing::after {
     content: '▋';

@@ -4,8 +4,8 @@
 
   <!-- Label -->
   <span class="font-mono text-[11px] tracking-[0.22em] text-black/60 uppercase">LLMO 簡易診断</span>
-  <p class="mt-0.5 font-mono text-[10px] text-black/28 leading-relaxed">
-    robots.txt・llms.txt・構造化データのAI対応状況を無料診断 <span class="text-black/20">/ ページ単位</span>
+  <p class="mt-0.5 font-mono text-xs text-black/55 leading-relaxed">
+    robots.txt・llms.txt・構造化データのAI対応状況を無料診断 <span class="text-black/35">/ ページ単位</span>
   </p>
 
   <!-- URL Input row -->
@@ -105,13 +105,13 @@
 
   function checkItem(label: string, message: string, ok: boolean | null) {
     const li = document.createElement('li');
-    li.style.cssText = 'display:flex;align-items:baseline;gap:0.4rem;font-family:monospace;font-size:10px;line-height:1.6;';
+    li.style.cssText = 'display:flex;align-items:baseline;gap:0.4rem;font-family:monospace;font-size:11px;line-height:1.6;';
     const dot   = ok === null ? '·' : ok ? '✓' : '✗';
-    const color = ok === null ? 'rgba(0,0,0,0.35)' : ok ? 'rgba(0,0,0,0.75)' : 'rgba(180,40,40,0.8)';
+    const color = ok === null ? 'rgba(0,0,0,0.45)' : ok ? 'rgba(0,0,0,0.80)' : 'rgba(180,40,40,0.85)';
     li.innerHTML = `
       <span style="color:${color};flex-shrink:0;width:1em;">${dot}</span>
-      <span style="color:rgba(0,0,0,0.32);flex-shrink:0;letter-spacing:.1em;text-transform:uppercase;">${label}</span>
-      <span style="color:rgba(0,0,0,0.5);">${message}</span>
+      <span style="color:rgba(0,0,0,0.50);flex-shrink:0;letter-spacing:.1em;text-transform:uppercase;">${label}</span>
+      <span style="color:rgba(0,0,0,0.68);">${message}</span>
     `;
     checksEl.appendChild(li);
   }
