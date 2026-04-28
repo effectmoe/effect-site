@@ -136,6 +136,7 @@ async function analyzePage(url: string) {
   const none = {
     metaTags:       { score: 0, title: '', description: '', hasOgp: false, message: 'ページを取得できませんでした' },
     structuredData: { score: 0, schemasFound: 0, schemas: [] as SchemaEntry[], message: 'ページを取得できませんでした' },
+    topicCluster:   { score: 0, h1Count: 0, h1Text: '', h2Count: 0, h2s: [] as string[], h3Count: 0, internalLinks: 0, message: 'ページを取得できませんでした' },
   };
 
   const res = await fetchSafe(url, 9000);

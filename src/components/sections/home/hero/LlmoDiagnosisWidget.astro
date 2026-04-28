@@ -243,7 +243,7 @@
       domainEl.textContent = domain;
 
       const order = ['llmsTxt', 'robotsTxt', 'sitemapXml', 'structuredData', 'metaTags', 'topicCluster'];
-      for (const key of order) renderCheck(key, checks[key]);
+      for (const key of order) if (checks[key] != null) renderCheck(key, checks[key]);
 
       resultEl.classList.remove('hidden');
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
