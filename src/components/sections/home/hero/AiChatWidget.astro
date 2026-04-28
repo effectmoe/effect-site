@@ -1,95 +1,101 @@
 ---
 ---
-<div id="ai-chat-widget" class="absolute top-10 left-4 z-20 w-[min(420px,90vw)] lg:left-14 lg:top-16">
-  <!-- Header -->
-  <div class="bg-primary flex items-center justify-between px-4 py-2.5">
-    <div class="flex items-center gap-2.5">
-      <span class="bg-accent inline-block h-1.5 w-1.5 rounded-full"></span>
-      <span class="font-mono text-xs tracking-[0.15em] text-white uppercase">EFFECT AI</span>
-    </div>
-    <span class="font-mono text-[10px] text-white/40 uppercase tracking-widest">LLMO Assistant</span>
+<div id="ai-chat" class="flex h-full flex-col border-b border-black/10 pb-10 lg:pb-14">
+  <!-- Label -->
+  <div class="mb-6 flex items-center gap-3">
+    <span class="font-mono text-[10px] tracking-[0.18em] text-black/40 uppercase">Ask Effect AI</span>
+    <span id="ai-status" class="inline-block h-1.5 w-1.5 rounded-full bg-black/20"></span>
   </div>
 
-  <!-- Messages -->
-  <div
-    id="chat-messages"
-    class="bg-primary/90 h-52 space-y-3 overflow-y-auto p-4 backdrop-blur-sm"
-    style="scrollbar-width: thin; scrollbar-color: #333 transparent;"
-  >
-    <!-- Initial message -->
-    <div class="chat-msg assistant">
-      <p class="font-mono text-xs leading-relaxed text-white/70">
-        EFFECTのAIアシスタントです。<br>LLMO・AI戦略・Webについてご質問ください。
+  <!-- Conversation -->
+  <div id="ai-messages" class="flex-1 space-y-5 overflow-y-auto pr-1" style="scrollbar-width: none;">
+    <div class="ai-msg" data-role="assistant">
+      <p class="font-mono text-xs leading-[1.8] text-black/40">
+        LLMO・AIコンテンツ戦略・EFFECTのサービスについて<br>
+        何でもご質問ください。
       </p>
     </div>
   </div>
 
-  <!-- Input -->
-  <div class="bg-primary/95 flex items-center gap-2 border-t border-white/10 px-3 py-2.5">
-    <input
-      id="chat-input"
-      type="text"
-      placeholder="質問を入力..."
-      maxlength="200"
-      class="flex-1 bg-transparent font-mono text-xs text-white outline-none placeholder:text-white/30"
-    />
-    <button
-      id="chat-send"
-      class="group flex h-7 w-7 items-center justify-center border border-white/20 transition-colors hover:border-white/60"
-      aria-label="送信"
-    >
-      <svg class="h-3 w-3 text-white/50 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/>
-      </svg>
+  <!-- Suggestions -->
+  <div id="ai-suggestions" class="mt-4 flex flex-wrap gap-x-4 gap-y-1">
+    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">
+      LLMOとは？
+    </button>
+    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">
+      EFFECTに依頼するには
+    </button>
+    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">
+      AIコンテンツ戦略
     </button>
   </div>
 
-  <!-- Suggested questions -->
-  <div id="chat-suggestions" class="bg-primary/80 flex flex-wrap gap-1.5 border-t border-white/5 px-3 py-2">
-    <button class="suggestion-btn font-mono text-[10px] text-white/40 hover:text-white/80 transition-colors tracking-wider uppercase">LLMOとは？</button>
-    <button class="suggestion-btn font-mono text-[10px] text-white/40 hover:text-white/80 transition-colors tracking-wider uppercase">EFFECTのサービス</button>
-    <button class="suggestion-btn font-mono text-[10px] text-white/40 hover:text-white/80 transition-colors tracking-wider uppercase">AI戦略の始め方</button>
+  <!-- Input -->
+  <div class="mt-6 flex items-center gap-3 border-b border-black/20 pb-2">
+    <input
+      id="ai-input"
+      type="text"
+      placeholder="質問を入力..."
+      maxlength="200"
+      class="flex-1 bg-transparent font-mono text-xs text-black outline-none placeholder:text-black/25"
+    />
+    <button
+      id="ai-send"
+      aria-label="送信"
+      class="font-mono text-xs text-black/30 transition-colors hover:text-black"
+    >
+      →
+    </button>
   </div>
 </div>
 
 <style>
-  .chat-msg.user p {
-    color: rgba(255,255,255,0.9);
+  #ai-messages { max-height: 240px; }
+
+  .ai-msg[data-role="user"] p {
+    color: rgba(0,0,0,0.75);
     text-align: right;
   }
-  .chat-msg.assistant p {
-    color: rgba(255,255,255,0.65);
-  }
-  .chat-msg.user {
+  .ai-msg[data-role="user"] {
     display: flex;
     justify-content: flex-end;
   }
-  .chat-msg.user p {
-    background: rgba(255,255,255,0.08);
-    padding: 0.375rem 0.625rem;
-    max-width: 85%;
+
+  .ai-msg[data-role="assistant"] p {
+    color: rgba(0,0,0,0.45);
   }
-  .typing-cursor::after {
+
+  .typing::after {
     content: '▋';
     animation: blink 0.8s step-end infinite;
-    color: rgba(255,255,255,0.4);
+    opacity: 0.4;
   }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes blink { 0%,100%{opacity:0.4} 50%{opacity:0} }
+
+  #ai-messages::-webkit-scrollbar { display: none; }
 </style>
 
 <script>
-  const messagesEl = document.getElementById('chat-messages')!;
-  const inputEl = document.getElementById('chat-input') as HTMLInputElement;
-  const sendBtn = document.getElementById('chat-send')!;
-  const suggestionsEl = document.getElementById('chat-suggestions')!;
+  const messagesEl = document.getElementById('ai-messages')!;
+  const inputEl    = document.getElementById('ai-input') as HTMLInputElement;
+  const sendBtn    = document.getElementById('ai-send')!;
+  const statusDot  = document.getElementById('ai-status')!;
+  const suggestEl  = document.getElementById('ai-suggestions')!;
 
-  const history: { role: 'user' | 'assistant'; content: string }[] = [];
+  const history: { role: 'user'|'assistant'; content: string }[] = [];
 
-  function addMessage(role: 'user' | 'assistant', text: string) {
+  function addMsg(role: 'user'|'assistant', text = '') {
     const div = document.createElement('div');
-    div.className = `chat-msg ${role}`;
+    div.className = 'ai-msg';
+    div.dataset.role = role;
     const p = document.createElement('p');
-    p.className = 'font-mono text-xs leading-relaxed';
+    p.className = 'font-mono text-xs leading-[1.8]';
+    if (role === 'user') {
+      const label = document.createElement('span');
+      label.className = 'mb-1 block font-mono text-[10px] tracking-widest text-black/25 uppercase text-right';
+      label.textContent = 'YOU';
+      div.appendChild(label);
+    }
     p.textContent = text;
     div.appendChild(p);
     messagesEl.appendChild(div);
@@ -97,21 +103,22 @@
     return p;
   }
 
-  async function sendMessage(text: string) {
-    if (!text.trim()) return;
+  function setLoading(loading: boolean) {
+    statusDot.style.backgroundColor = loading ? '#000' : 'rgba(0,0,0,0.2)';
+    inputEl.disabled = loading;
+    sendBtn.toggleAttribute('disabled', loading);
+  }
 
-    // Hide suggestions after first message
-    suggestionsEl.style.display = 'none';
-
-    addMessage('user', text);
+  async function send(text: string) {
+    if (!text.trim() || inputEl.disabled) return;
+    suggestEl.style.display = 'none';
+    addMsg('user', text);
     history.push({ role: 'user', content: text });
     inputEl.value = '';
-    inputEl.disabled = true;
-    sendBtn.setAttribute('disabled', 'true');
+    setLoading(true);
 
-    // Streaming assistant response
-    const p = addMessage('assistant', '');
-    p.classList.add('typing-cursor');
+    const p = addMsg('assistant');
+    p.classList.add('typing');
 
     try {
       const res = await fetch('/api/chat', {
@@ -119,55 +126,43 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, history: history.slice(-6) }),
       });
-
-      if (!res.ok) throw new Error('API error');
-      if (!res.body) throw new Error('No stream');
+      if (!res.ok || !res.body) throw new Error();
 
       const reader = res.body.getReader();
-      const decoder = new TextDecoder();
+      const dec = new TextDecoder();
       let full = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        // Parse SSE: "data: {...}\n\n"
-        for (const line of chunk.split('\n')) {
+        for (const line of dec.decode(value, { stream: true }).split('\n')) {
           if (!line.startsWith('data: ')) continue;
           const raw = line.slice(6).trim();
           if (raw === '[DONE]') break;
           try {
-            const json = JSON.parse(raw);
-            const delta = json.response ?? json.choices?.[0]?.delta?.content ?? '';
-            full += delta;
+            const d = JSON.parse(raw);
+            const token = d.response ?? d.choices?.[0]?.delta?.content ?? '';
+            full += token;
             p.textContent = full;
             messagesEl.scrollTop = messagesEl.scrollHeight;
           } catch {}
         }
       }
-
-      p.classList.remove('typing-cursor');
       history.push({ role: 'assistant', content: full });
-    } catch (e) {
-      p.classList.remove('typing-cursor');
-      p.textContent = '申し訳ありません。接続エラーが発生しました。';
+    } catch {
+      p.textContent = '接続エラー。しばらくしてから再試行してください。';
     } finally {
-      inputEl.disabled = false;
-      sendBtn.removeAttribute('disabled');
+      p.classList.remove('typing');
+      setLoading(false);
       inputEl.focus();
     }
   }
 
-  sendBtn.addEventListener('click', () => sendMessage(inputEl.value));
+  sendBtn.addEventListener('click', () => send(inputEl.value));
   inputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage(inputEl.value);
-    }
+    if (e.key === 'Enter') { e.preventDefault(); send(inputEl.value); }
   });
-
-  document.querySelectorAll<HTMLButtonElement>('.suggestion-btn').forEach((btn) => {
-    btn.addEventListener('click', () => sendMessage(btn.textContent ?? ''));
+  document.querySelectorAll<HTMLButtonElement>('.ai-suggestion').forEach((b) => {
+    b.addEventListener('click', () => send(b.textContent!.trim()));
   });
 </script>
