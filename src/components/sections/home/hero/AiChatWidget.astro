@@ -73,6 +73,10 @@
   @keyframes blink { 0%,100%{opacity:0.4} 50%{opacity:0} }
 
   #ai-messages::-webkit-scrollbar { display: none; }
+
+  /* Typewriter cursor on placeholder */
+  #ai-input::placeholder { color: rgba(0,0,0,0.25); }
+  #ai-input.animating::placeholder { color: rgba(0,0,0,0.35); }
 </style>
 
 <script>
@@ -83,6 +87,68 @@
   const suggestEl  = document.getElementById('ai-suggestions')!;
 
   const history: { role: 'user'|'assistant'; content: string }[] = [];
+
+  // ── Typewriter placeholder ────────────────────────────────
+  const questions = [
+    'LLMOとは何ですか？',
+    'AIにコンテンツを引用させるには？',
+    'EFFECTのサービスを教えてください',
+    'SEOとLLMOの違いは？',
+    'コンテンツ戦略の始め方',
+    'AIがブランドを認識する仕組みは？',
+  ];
+
+  let qIdx = 0;
+  let charIdx = 0;
+  let deleting = false;
+  let animFrame: ReturnType<typeof setTimeout>;
+  let isUserFocused = false;
+
+  function typeStep() {
+    if (isUserFocused || inputEl.value) return;
+
+    const q = questions[qIdx];
+
+    if (!deleting) {
+      charIdx++;
+      inputEl.placeholder = q.slice(0, charIdx);
+      if (charIdx === q.length) {
+        deleting = true;
+        animFrame = setTimeout(typeStep, 2200); // pause at full text
+        return;
+      }
+      animFrame = setTimeout(typeStep, 65);
+    } else {
+      charIdx--;
+      inputEl.placeholder = q.slice(0, charIdx);
+      if (charIdx === 0) {
+        deleting = false;
+        qIdx = (qIdx + 1) % questions.length;
+        animFrame = setTimeout(typeStep, 400); // pause before next
+        return;
+      }
+      animFrame = setTimeout(typeStep, 28);
+    }
+  }
+
+  // Start after short delay
+  setTimeout(() => { inputEl.classList.add('animating'); typeStep(); }, 1200);
+
+  inputEl.addEventListener('focus', () => {
+    isUserFocused = true;
+    clearTimeout(animFrame);
+    inputEl.placeholder = '質問を入力...';
+    inputEl.classList.remove('animating');
+  });
+  inputEl.addEventListener('blur', () => {
+    if (!inputEl.value) {
+      isUserFocused = false;
+      charIdx = 0;
+      deleting = false;
+      setTimeout(() => { inputEl.classList.add('animating'); typeStep(); }, 800);
+    }
+  });
+  // ─────────────────────────────────────────────────────────
 
   function addMsg(role: 'user'|'assistant', text = '') {
     const div = document.createElement('div');
