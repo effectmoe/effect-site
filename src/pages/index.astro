@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
 import GlobeHeroSplit from '@/components/sections/home/hero/GlobeHeroSplit.astro';
+import LlmoDiagnosis from '@/components/sections/home/LlmoDiagnosis.astro';
 import AboutHome from '@/components/sections/home/AboutHome.astro';
 import Services from '@/components/sections/home/service/Services.astro';
 import Process from '@/components/sections/home/process/Process.astro';
@@ -33,6 +34,7 @@ const allEntries = [
 
 <Layout title={t('meta.index.title')} description={t('meta.index.description')} keywords={t('meta.index.keywords')}>
   <GlobeHeroSplit />
+  <LlmoDiagnosis />
   <KnowledgeHome entries={allEntries} count={KNOWLEDGE_COUNT} />
   <AboutHome />
   <Services />

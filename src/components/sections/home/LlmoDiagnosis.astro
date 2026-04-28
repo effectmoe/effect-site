@@ -1,0 +1,246 @@
+---
+---
+
+<section id="llmo-diagnosis" class="w-full border-t border-black/10 px-4 py-16 lg:px-14 lg:py-24">
+  <!-- Header -->
+  <div class="mb-10 max-w-2xl">
+    <span class="font-mono text-[10px] tracking-[0.18em] text-black/35 uppercase">Free Diagnosis</span>
+    <h2 class="font-clash mt-3 text-3xl leading-tight lg:text-5xl">LLMO 簡易診断</h2>
+    <p class="mt-3 font-mono text-xs leading-relaxed text-black/45">
+      robots.txt・llms.txt・sitemap.xml・構造化データなど、AIがあなたのサイトを正しく認識できるかを無料で診断します。
+    </p>
+  </div>
+
+  <!-- Input -->
+  <div class="flex max-w-xl gap-0">
+    <input
+      id="llmo-url"
+      type="url"
+      placeholder="https://example.com"
+      class="flex-1 border border-black/20 border-r-0 bg-transparent px-4 py-3 font-mono text-xs text-black outline-none placeholder:text-black/25 focus:border-black/60 transition-colors"
+    />
+    <button
+      id="llmo-run"
+      class="bg-black px-6 py-3 font-mono text-[10px] tracking-[0.16em] text-white uppercase hover:bg-black/75 transition-colors whitespace-nowrap disabled:opacity-40"
+    >
+      診断開始
+    </button>
+  </div>
+
+  <!-- Status -->
+  <p id="llmo-status" class="mt-4 hidden font-mono text-[10px] tracking-widest text-black/40 uppercase animate-pulse">
+    診断中...
+  </p>
+  <p id="llmo-error" class="mt-4 hidden font-mono text-xs text-red-600/70"></p>
+
+  <!-- Results -->
+  <div id="llmo-result" class="hidden mt-10 max-w-xl">
+
+    <!-- Score row -->
+    <div class="flex items-end gap-3 pb-6 border-b border-black/10">
+      <span id="res-score" class="font-clash text-7xl leading-none">—</span>
+      <span class="font-mono text-xs text-black/35 mb-2">/100</span>
+      <span id="res-grade" class="font-mono text-lg font-bold mb-1 ml-1"></span>
+      <span class="font-mono text-[10px] text-black/35 mb-2 ml-auto" id="res-domain"></span>
+    </div>
+
+    <!-- Check items -->
+    <div id="res-checks" class="mt-6 space-y-4"></div>
+
+    <!-- Upgrade CTA -->
+    <div class="mt-8 border-t border-black/10 pt-6">
+      <p class="font-mono text-[10px] tracking-wide text-black/40 mb-4">
+        詳細な改善提案・競合比較・E-E-A-T分析・自動修正レポートは有料診断で提供しています
+      </p>
+      <a
+        href="/contact"
+        class="inline-flex items-center gap-2 border border-black px-5 py-2.5 font-mono text-[10px] tracking-[0.14em] uppercase text-black hover:bg-black hover:text-white transition-all"
+      >
+        フルレポートを依頼する <span>→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .check-row { display: flex; flex-direction: column; gap: 0.25rem; }
+  .check-label { font-family: monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(0,0,0,0.35); }
+  .check-value { font-family: monospace; font-size: 11px; color: rgba(0,0,0,0.65); line-height: 1.6; }
+  .check-ok   { color: rgba(0,0,0,0.8); }
+  .check-warn { color: rgba(180,130,0,0.9); }
+  .check-fail { color: rgba(180,40,40,0.85); }
+
+  .schema-block { border: 1px solid rgba(0,0,0,0.08); padding: 0.75rem 1rem; }
+  .schema-type  { font-family: monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .issue-line   { font-family: monospace; font-size: 10px; color: rgba(0,0,0,0.5); display: flex; gap: 0.4rem; align-items: flex-start; }
+  .issue-error  { color: rgba(180,40,40,0.8); }
+  .issue-warn   { color: rgba(180,130,0,0.85); }
+</style>
+
+<script>
+  const urlInput  = document.getElementById('llmo-url') as HTMLInputElement;
+  const runBtn    = document.getElementById('llmo-run') as HTMLButtonElement;
+  const statusEl  = document.getElementById('llmo-status')!;
+  const errorEl   = document.getElementById('llmo-error')!;
+  const resultEl  = document.getElementById('llmo-result')!;
+
+  const resScore  = document.getElementById('res-score')!;
+  const resGrade  = document.getElementById('res-grade')!;
+  const resDomain = document.getElementById('res-domain')!;
+  const resChecks = document.getElementById('res-checks')!;
+
+  function icon(ok: boolean | null) {
+    if (ok === null) return '·';
+    return ok ? '✓' : '✗';
+  }
+
+  function statusClass(ok: boolean | null) {
+    if (ok === null) return 'check-warn';
+    return ok ? 'check-ok' : 'check-fail';
+  }
+
+  function addCheck(label: string, value: string, ok: boolean | null) {
+    const row = document.createElement('div');
+    row.className = 'check-row';
+    row.innerHTML = `
+      <span class="check-label">${label}</span>
+      <span class="check-value ${statusClass(ok)}">${icon(ok)} ${value}</span>
+    `;
+    resChecks.appendChild(row);
+  }
+
+  function addDivider() {
+    const hr = document.createElement('div');
+    hr.style.cssText = 'border-top: 1px solid rgba(0,0,0,0.07); margin: 0.5rem 0;';
+    resChecks.appendChild(hr);
+  }
+
+  async function run() {
+    const url = urlInput.value.trim();
+    if (!url) { urlInput.focus(); return; }
+
+    runBtn.disabled = true;
+    statusEl.classList.remove('hidden');
+    errorEl.classList.add('hidden');
+    resultEl.classList.add('hidden');
+    resChecks.innerHTML = '';
+
+    try {
+      const res = await fetch('/api/diagnose-llmo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await res.json() as any;
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error ?? '診断に失敗しました');
+      }
+
+      const { score, grade, domain, checks } = data;
+
+      // Score
+      resScore.textContent = String(score);
+      resGrade.textContent = grade;
+      resDomain.textContent = domain;
+
+      // Grade color
+      resGrade.style.color = score >= 80 ? '#1a7a1a' : score >= 60 ? '#7a6a00' : score >= 40 ? '#c05000' : '#c01010';
+
+      // ── Check rows ────────────────────────────────────────────
+
+      // llms.txt
+      const llms = checks.llmsTxt;
+      addCheck('llms.txt', llms.message, llms.exists);
+      if (llms.exists && llms.preview) {
+        const prev = document.createElement('div');
+        prev.className = 'check-row';
+        prev.innerHTML = `<span class="check-label">preview</span><span class="check-value" style="color:rgba(0,0,0,0.35);word-break:break-all">${llms.preview.slice(0, 120)}…</span>`;
+        resChecks.appendChild(prev);
+      }
+
+      addDivider();
+
+      // robots.txt
+      const robots = checks.robotsTxt;
+      addCheck('robots.txt', robots.message, robots.exists ? robots.aiAllowed : false);
+      if (robots.exists && !robots.aiAllowed && robots.blockedBots?.length) {
+        addCheck('ブロック中のAIボット', robots.blockedBots.join(', '), false);
+      }
+
+      addDivider();
+
+      // sitemap.xml
+      addCheck('sitemap.xml', checks.sitemapXml.message, checks.sitemapXml.exists);
+
+      addDivider();
+
+      // Meta tags
+      addCheck('メタタグ', checks.metaTags.message, checks.metaTags.score >= 6);
+      if (checks.metaTags.title) {
+        addCheck('title', checks.metaTags.title, null);
+      }
+
+      addDivider();
+
+      // Structured data
+      const sd = checks.structuredData;
+      addCheck('構造化データ', sd.message, sd.schemasFound > 0);
+
+      if (sd.schemas?.length > 0) {
+        // Show each schema with its issues
+        for (const schema of sd.schemas.slice(0, 4)) {
+          const block = document.createElement('div');
+          block.className = 'schema-block';
+
+          const scoreBar = Math.round(schema.score / 10);
+          const bar = '█'.repeat(scoreBar) + '░'.repeat(10 - scoreBar);
+
+          let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+            <span class="schema-type">${schema.type}</span>
+            <span style="font-family:monospace;font-size:9px;color:rgba(0,0,0,0.3);">${bar} ${schema.score}</span>
+          </div>`;
+
+          if (schema.issues?.length > 0) {
+            html += schema.issues.slice(0, 3).map((iss: any) =>
+              `<div class="issue-line ${iss.sev === 'error' ? 'issue-error' : 'issue-warn'}">
+                <span>${iss.sev === 'error' ? '✗' : '△'}</span>
+                <span>${iss.msg}</span>
+              </div>`
+            ).join('');
+            if (schema.issues.length > 3) {
+              html += `<div class="issue-line" style="color:rgba(0,0,0,0.3);">+ ${schema.issues.length - 3}件の指摘（詳細は有料レポート）</div>`;
+            }
+          } else {
+            html += `<div class="issue-line check-ok">✓ 必須プロパティがすべて揃っています</div>`;
+          }
+
+          block.innerHTML = html;
+          resChecks.appendChild(block);
+        }
+
+        if (sd.schemas.length > 4) {
+          const more = document.createElement('p');
+          more.className = 'check-value';
+          more.style.color = 'rgba(0,0,0,0.3)';
+          more.textContent = `…他 ${sd.schemas.length - 4} 件の構造化データ（詳細は有料レポート）`;
+          resChecks.appendChild(more);
+        }
+      }
+
+      resultEl.classList.remove('hidden');
+    } catch (e: any) {
+      errorEl.textContent = e.message ?? 'エラーが発生しました';
+      errorEl.classList.remove('hidden');
+    } finally {
+      statusEl.classList.add('hidden');
+      runBtn.disabled = false;
+    }
+  }
+
+  runBtn.addEventListener('click', run);
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') run();
+  });
+</script>
