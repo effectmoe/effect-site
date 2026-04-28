@@ -285,10 +285,10 @@ interface SchemaEntry {
 
 const CHECK_LABELS_EMAIL: Record<string, string> = {
   llmsTxt: 'llms.txt', robotsTxt: 'robots.txt', sitemapXml: 'sitemap.xml',
-  metaTags: 'メタタグ', structuredData: '構造化データ',
+  metaTags: 'メタタグ', structuredData: '構造化データ', topicCluster: 'コンテンツ構造',
 };
 const MAX_SCORES_EMAIL: Record<string, number> = {
-  llmsTxt: 40, robotsTxt: 20, sitemapXml: 10, structuredData: 30, metaTags: 10,
+  llmsTxt: 40, robotsTxt: 20, sitemapXml: 10, structuredData: 30, metaTags: 10, topicCluster: 20,
 };
 
 function emailSymbol(key: string, c: any): { sym: string; color: string; scoreColor: string } {
@@ -307,6 +307,7 @@ function emailSymbol(key: string, c: any): { sym: string; color: string; scoreCo
       if (!c.schemasFound) return B;
       return (c.schemas ?? []).some((s: any) => s.issues?.some((i: any) => i.sev === 'error')) ? W : G;
     }
+    case 'topicCluster': return c.score >= 16 ? G : c.score >= 8 ? W : B;
     default: return ('exists' in c ? c.exists : (c.schemasFound ?? c.score) > 0) ? G : B;
   }
 }
@@ -330,7 +331,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     ]);
 
     const score = Math.min(100,
-      robots.score + llms.score + sitemap.score + page.metaTags.score + page.structuredData.score
+      robots.score + llms.score + sitemap.score + page.metaTags.score + page.structuredData.score + page.topicCluster.score
     );
     const gradeLabel = score >= 80 ? 'A' : score >= 60 ? 'B' : score >= 40 ? 'C' : score >= 20 ? 'D' : 'F';
 
@@ -345,6 +346,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         sitemapXml:     sitemap,
         metaTags:       page.metaTags,
         structuredData: page.structuredData,
+        topicCluster:   page.topicCluster,
       },
     };
 
@@ -374,7 +376,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         `総合スコア: ${score}/100 (${gradeLabel})`,
         ``,
         `【診断結果】`,
-        ...(['llmsTxt','robotsTxt','sitemapXml','structuredData','metaTags'] as const).map(k => {
+        ...(['llmsTxt','robotsTxt','sitemapXml','structuredData','metaTags','topicCluster'] as const).map(k => {
           const { sym } = emailSymbol(k, checks[k]);
           return `${sym} ${CHECK_LABELS_EMAIL[k]}: ${checks[k].message}`;
         }),
@@ -397,7 +399,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   <p style="font-size:13px;color:#aaa;margin-bottom:28px;">${new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</p>
   <div style="font-size:36px;font-weight:bold;margin-bottom:4px;">${score}<span style="font-size:16px;font-weight:normal;color:#aaa;">/100</span> <span style="font-size:22px;">${gradeLabel}</span></div>
   <hr style="border:none;border-top:1px solid #eee;margin:18px 0 22px;">
-  ${(['llmsTxt','robotsTxt','sitemapXml','structuredData','metaTags'] as const).map(k => {
+  ${(['llmsTxt','robotsTxt','sitemapXml','structuredData','metaTags','topicCluster'] as const).map(k => {
     const c = checks[k];
     const { sym, color, scoreColor } = emailSymbol(k, c);
     const max = MAX_SCORES_EMAIL[k];

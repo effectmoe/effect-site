@@ -84,7 +84,7 @@
         href="/contact"
         class="font-mono text-xs tracking-[0.1em] text-black/55 uppercase underline underline-offset-4 decoration-black/20 hover:text-black hover:decoration-black/60 transition-colors"
       >
-        詳細レポートを依頼する →
+        完全分析を依頼する →
       </a>
     </div>
   </div>
@@ -114,10 +114,11 @@
     sitemapXml:     'sitemap.xml',
     metaTags:       'メタタグ',
     structuredData: '構造化データ',
+    topicCluster:   'コンテンツ構造',
   };
 
   const MAX_SCORES: Record<string, number> = {
-    llmsTxt: 40, robotsTxt: 20, sitemapXml: 10, structuredData: 30, metaTags: 10,
+    llmsTxt: 40, robotsTxt: 20, sitemapXml: 10, structuredData: 30, metaTags: 10, topicCluster: 20,
   };
 
   const GRADE_DESCS: Record<string, string> = {
@@ -157,6 +158,8 @@
         const hasErr = (c.schemas ?? []).some((s: any) => s.issues?.some((i: any) => i.sev === 'error'));
         return hasErr ? W : G;
       }
+      case 'topicCluster':
+        return c.score >= 16 ? G : c.score >= 8 ? W : B;
       default:
         return ('exists' in c ? c.exists : (c.schemasFound ?? c.score) > 0) ? G : B;
     }
@@ -185,6 +188,12 @@
       const types = [...new Set((c.schemas ?? []).map((s: any) => s.type))].slice(0, 4).join(', ');
       detail = `${c.schemasFound}件の構造化データを検出`;
       sub = types;
+    }
+    if (key === 'topicCluster') {
+      if (c.h1Count > 0 || c.h2Count > 0) {
+        detail = `H1×${c.h1Count} H2×${c.h2Count} H3×${c.h3Count} / 内部リンク ${c.internalLinks}件`;
+        if (c.h1Text) sub = `"${c.h1Text.slice(0, 55)}${c.h1Text.length > 55 ? '…' : ''}"`;
+      }
     }
 
     const li = document.createElement('li');
@@ -233,7 +242,7 @@
       gradeDescEl.textContent = GRADE_DESCS[grade] ?? '';
       domainEl.textContent = domain;
 
-      const order = ['llmsTxt', 'robotsTxt', 'sitemapXml', 'structuredData', 'metaTags'];
+      const order = ['llmsTxt', 'robotsTxt', 'sitemapXml', 'structuredData', 'metaTags', 'topicCluster'];
       for (const key of order) renderCheck(key, checks[key]);
 
       resultEl.classList.remove('hidden');
