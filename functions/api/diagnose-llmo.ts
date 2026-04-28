@@ -299,6 +299,13 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         `メタタグ: ${checks.metaTags.message}`,
         `構造化データ: ${checks.structuredData.message}`,
         ``,
+        `【この診断について】`,
+        `この診断は GPTBot・PerplexityBot などの AI クローラーと同じ手法で、`,
+        `静的 HTML のみを解析しています。JavaScript で描画されるメタタグや構造化データは`,
+        `AI にも認識されないため、このスコアに正直に反映されます。`,
+        `スコアが低い場合、あなたのサイトは Google には見えていても、`,
+        `AI には見えていない可能性があります。`,
+        ``,
         `※ この診断はページ単位（単一ページ）の簡易診断です。`,
         `  詳細な改善提案・競合比較・全ページ分析は有料診断プランをご利用ください。`,
         `  https://effect.moe/contact`,
@@ -314,6 +321,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     `<p style="margin-bottom:8px;line-height:1.6;">${c.message}</p>`
   ).join('')}
   <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+  <div style="border-left:2px solid #e8e8e8;padding-left:12px;margin-bottom:20px;">
+    <p style="font-size:12px;color:#555;line-height:1.8;margin:0 0 6px;">この診断は GPTBot・PerplexityBot などの AI クローラーと同じ手法で、静的 HTML のみを解析しています。</p>
+    <p style="font-size:11px;color:#888;line-height:1.8;margin:0;">JavaScript で描画されるメタタグや構造化データは AI にも認識されないため、このスコアに正直に反映されます。スコアが低い場合、あなたのサイトは Google には見えていても、<strong style="color:#555;">AI には見えていない可能性があります。</strong></p>
+  </div>
   <p style="font-size:11px;color:#aaa;">※ この診断はページ単位（単一ページ）の簡易診断です。</p>
   <p style="font-size:11px;color:#aaa;margin-top:4px;">詳細な改善提案・競合比較・全ページ分析は <a href="https://effect.moe/contact" style="color:#666;">有料診断プラン</a> をご利用ください。</p>
   <p style="font-size:10px;color:#bbb;margin-top:24px;">effect.moe</p>
