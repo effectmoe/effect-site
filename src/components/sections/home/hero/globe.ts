@@ -311,7 +311,7 @@ export class GlobeRenderer {
     const cw = ctx.measureText("M").width;
     const ch = cfg.fontPx * cfg.lineH;
 
-    const isMobile = w < 640;
+    const isMobile = w < 1024; // match CSS lg breakpoint for single-column layout
 
     state.w    = w;
     state.h    = h;
