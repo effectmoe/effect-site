@@ -202,6 +202,45 @@ async function analyzePage(url: string) {
     ? 0
     : Math.min(30, Math.round(schemas.reduce((s, sc) => s + sc.score, 0) / schemas.length * 0.3));
 
+  // ── Topic cluster: heading structure + internal links ─────────
+  const strip = (s: string) => s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const h1s = [...html.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/gi)].map(m => strip(m[1])).filter(Boolean);
+  const h2s = [...html.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/gi)].map(m => strip(m[1])).filter(Boolean).slice(0, 8);
+  const h3s = [...html.matchAll(/<h3[^>]*>([\s\S]*?)<\/h3>/gi)].map(m => strip(m[1])).filter(Boolean).slice(0, 8);
+
+  const pageOrigin = new URL(url).origin;
+  const genericWords = ['こちら', 'here', 'click', 'more', 'read', '詳しく', '続き', 'もっと'];
+  let internalLinks = 0, genericAnchorCount = 0;
+  for (const m of html.matchAll(/<a[^>]+href=["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    const href = m[1], anchor = strip(m[2]);
+    if (href.startsWith('/') || href.startsWith(pageOrigin)) {
+      internalLinks++;
+      if (genericWords.some(g => anchor.toLowerCase().includes(g))) genericAnchorCount++;
+    }
+  }
+
+  // Heading score (max 10)
+  let headingScore = 0;
+  if (h1s.length > 0)  headingScore += 3;
+  if (h1s.length === 1) headingScore += 2;
+  if (h2s.length >= 2)  headingScore += 3;
+  if (h3s.length >= 2)  headingScore += 2;
+
+  // Link score (max 10)
+  let linkScore = 0;
+  if (internalLinks >= 1) linkScore += 3;
+  if (internalLinks >= 3) linkScore += 3;
+  if (internalLinks >= 5) linkScore += 2;
+  if (internalLinks > 0 && genericAnchorCount === 0) linkScore += 2;
+
+  const topicScore = Math.min(20, headingScore + linkScore);
+
+  const topicIssues: string[] = [];
+  if (h1s.length === 0)  topicIssues.push('H1がありません');
+  else if (h1s.length > 1) topicIssues.push(`H1が${h1s.length}個（1つが推奨）`);
+  if (h2s.length < 2)    topicIssues.push('H2（サブトピック）が不足しています');
+  if (internalLinks === 0) topicIssues.push('内部リンクがありません');
+
   return {
     metaTags: {
       score: metaScore,
@@ -217,6 +256,18 @@ async function analyzePage(url: string) {
       message: schemas.length > 0
         ? `${schemas.length}件の構造化データを検出: ${[...new Set(schemas.map(s => s.type))].slice(0, 4).join(', ')}`
         : '構造化データ（JSON-LD）が見つかりません',
+    },
+    topicCluster: {
+      score: topicScore,
+      h1Count: h1s.length,
+      h1Text: h1s[0] ?? '',
+      h2Count: h2s.length,
+      h2s,
+      h3Count: h3s.length,
+      internalLinks,
+      message: topicIssues.length === 0
+        ? `H1×${h1s.length} H2×${h2s.length} H3×${h3s.length} / 内部リンク ${internalLinks}件`
+        : topicIssues.join(' / '),
     },
   };
 }
