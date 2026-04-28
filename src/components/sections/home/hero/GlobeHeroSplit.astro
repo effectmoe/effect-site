@@ -137,9 +137,11 @@ import { t } from '@/lib/utils';
 
   function expandChat() {
     // Full-screen overlay — centered column on desktop, full-width on mobile
+    // z-index 999 ensures we're above the site navbar; bg matches heroLeft panel
     Object.assign(heroOuter.style, {
-      position: 'fixed', inset: '0', zIndex: '50', overflow: 'hidden',
+      position: 'fixed', inset: '0', zIndex: '999', overflow: 'hidden',
       display: 'flex', justifyContent: 'center',
+      backgroundColor: getComputedStyle(heroLeft).backgroundColor,
     });
 
     // Hide globe and hero text
@@ -162,11 +164,11 @@ import { t } from '@/lib/utils';
     const aiSpacer    = document.getElementById('ai-spacer');
     const aiMessages  = document.getElementById('ai-messages');
     if (chatWrapper) Object.assign(chatWrapper.style, { flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' });
-    if (aiChat) Object.assign(aiChat.style, { flex: '1', display: 'flex', flexDirection: 'column' });
-    // Spacer grows → messages stay near the input (bottom-aligned feel)
-    if (aiSpacer) aiSpacer.style.flex = '1';
-    // Messages scroll internally; max-height adapts to viewport
-    if (aiMessages) Object.assign(aiMessages.style, { flex: '', maxHeight: 'calc(100dvh - 220px)', overflowY: 'auto' });
+    if (aiChat) Object.assign(aiChat.style, { flex: '1', display: 'flex', flexDirection: 'column', overflowY: 'auto' });
+    // No spacer — messages start at the top, new ones scroll down naturally
+    if (aiSpacer) aiSpacer.style.flex = '';
+    // Messages scroll within the chat area
+    if (aiMessages) Object.assign(aiMessages.style, { flex: '', maxHeight: 'none', overflowY: 'visible' });
   }
 
   function collapseChat() {
@@ -174,7 +176,7 @@ import { t } from '@/lib/utils';
     Object.assign(heroOuter.style, {
       position: orig.outerPosition, inset: orig.outerInset,
       zIndex: orig.outerZIndex, overflow: orig.outerOverflow,
-      display: '', justifyContent: '',
+      display: '', justifyContent: '', backgroundColor: '',
     });
 
     // Restore visibility
