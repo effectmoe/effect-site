@@ -184,6 +184,20 @@ import { t } from '@/lib/utils';
     heroText.style.display = '';
     closeRow.style.display = 'none';
 
+    // Ensure globe canvas has correct dimensions (keyboard-close resize may have
+    // fired while display:none, setting canvas to 0px). Force renderer to re-measure.
+    const globeCanvas = document.getElementById('globe-canvas-split') as HTMLCanvasElement | null;
+    if (globeCanvas) {
+      globeCanvas.style.width  = '';
+      globeCanvas.style.height = '';
+      globeCanvas.style.opacity = '1';
+      globeCanvas.style.visibility = 'visible';
+    }
+    window.dispatchEvent(new Event('resize'));
+
+    // Scroll to top so the hero (globe + hero text) is visible
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
     // Restore left panel
     Object.assign(heroLeft.style, {
       height: orig.leftHeight, paddingTop: orig.leftPaddingTop,
