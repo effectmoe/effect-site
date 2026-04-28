@@ -16,7 +16,7 @@ import { t } from '@/lib/utils';
     <div id="hero-chat-close-row" class="mb-4 items-center justify-between border-b border-black/10 pb-3" style="display:none;">
       <a href="/" class="font-clash text-xl leading-none text-black/80 transition-opacity hover:opacity-50">EFFECT</a>
       <button id="hero-chat-close-btn" class="font-mono text-[10px] tracking-[0.18em] text-black/35 uppercase transition-colors hover:text-black">
-        × 閉じる
+        × クリア
       </button>
     </div>
 
@@ -114,106 +114,89 @@ import { t } from '@/lib/utils';
     }, { once: true });
   }
 
-  // ── Mobile chat expansion (pure inline styles — avoids Astro CSS scoping) ──
-  const heroOuter    = document.getElementById('hero-outer')!;
-  const heroLeft     = document.getElementById('hero-left')!;
-  const heroText     = document.getElementById('hero-text-section')!;
-  const globeEl      = document.getElementById('globe-container')!;
-  const closeRow     = document.getElementById('hero-chat-close-row')!;
-  const closeBtn     = document.getElementById('hero-chat-close-btn')!;
+  // ── In-place chat expansion (globe collapses → chat fills that space) ──────
+  const heroOuter = document.getElementById('hero-outer')!;
+  const heroLeft  = document.getElementById('hero-left')!;
+  const heroText  = document.getElementById('hero-text-section')!;
+  const globeEl   = document.getElementById('globe-container')!;
+  const closeRow  = document.getElementById('hero-chat-close-row')!;
+  const closeBtn  = document.getElementById('hero-chat-close-btn')!;
 
-  // Store original inline styles for restoration
-  const orig = {
-    outerPosition:   heroOuter.style.position,
-    outerInset:      heroOuter.style.inset,
-    outerZIndex:     heroOuter.style.zIndex,
-    outerOverflow:   heroOuter.style.overflow,
-    leftHeight:      heroLeft.style.height,
-    leftPaddingTop:  heroLeft.style.paddingTop,
-    leftOverflow:    heroLeft.style.overflow,
-    leftDisplay:     heroLeft.style.display,
-    leftFlexDir:     heroLeft.style.flexDirection,
-  };
+  let globeSavedH = 0; // measured height before collapse
 
   function expandChat() {
-    // Full-screen overlay — centered column on desktop, full-width on mobile
-    // z-index 999 ensures we're above the site navbar; bg matches heroLeft panel
-    Object.assign(heroOuter.style, {
-      position: 'fixed', inset: '0', zIndex: '999', overflow: 'hidden',
-      display: 'flex', justifyContent: 'center',
-      backgroundColor: getComputedStyle(heroLeft).backgroundColor,
+    globeSavedH = globeEl.getBoundingClientRect().height;
+
+    // Collapse globe in-place: height → 0, fade out
+    globeEl.style.overflow = 'hidden';
+    gsap.to(globeEl, {
+      height: 0, opacity: 0, duration: 0.4, ease: 'power2.in',
+      onComplete: () => {
+        globeEl.style.display = 'none';
+        gsap.set(globeEl, { clearProps: 'height,opacity,overflow' });
+      },
     });
 
-    // Hide globe and hero text
-    globeEl.style.display  = 'none';
+    // Hide hero text; show clear row
     heroText.style.display = 'none';
-
-    // Left panel fills viewport (max-width centers it on wide screens)
-    Object.assign(heroLeft.style, {
-      height: '100dvh', paddingTop: '2.75rem',
-      overflow: 'hidden', display: 'flex', flexDirection: 'column',
-      width: '100%', maxWidth: '680px',
-    });
-
-    // Show close row
     closeRow.style.display = 'flex';
 
-    // Expand chat wrapper and widget to fill panel
+    // Lock hero outer to viewport height and expand heroLeft to fill it
+    heroOuter.style.height   = '100dvh';
+    heroOuter.style.overflow = 'hidden';
+    Object.assign(heroLeft.style, {
+      flex: '1', overflow: 'hidden',
+      display: 'flex', flexDirection: 'column', width: '100%',
+    });
+
+    // Expand chat widget to fill the panel
     const chatWrapper = document.getElementById('chat-wrapper');
     const aiChat      = document.getElementById('ai-chat');
-    const aiSpacer    = document.getElementById('ai-spacer');
     const aiMessages  = document.getElementById('ai-messages');
-    if (chatWrapper) Object.assign(chatWrapper.style, { flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' });
-    if (aiChat) Object.assign(aiChat.style, { flex: '1', display: 'flex', flexDirection: 'column', overflowY: 'auto' });
-    // No spacer — messages start at the top, new ones scroll down naturally
-    if (aiSpacer) aiSpacer.style.flex = '';
-    // Messages scroll within the chat area
-    if (aiMessages) Object.assign(aiMessages.style, { flex: '', maxHeight: 'none', overflowY: 'visible' });
+    if (chatWrapper) Object.assign(chatWrapper.style, { flex: '1', display: 'flex', flexDirection: 'column', overflow: 'hidden' });
+    if (aiChat)      Object.assign(aiChat.style,      { flex: '1', display: 'flex', flexDirection: 'column', overflowY: 'auto' });
+    if (aiMessages)  aiMessages.style.maxHeight = 'none';
   }
 
   function collapseChat() {
-    // Restore outer
-    Object.assign(heroOuter.style, {
-      position: orig.outerPosition, inset: orig.outerInset,
-      zIndex: orig.outerZIndex, overflow: orig.outerOverflow,
-      display: '', justifyContent: '', backgroundColor: '',
+    // Restore outer + left panel immediately
+    heroOuter.style.height   = '';
+    heroOuter.style.overflow = '';
+    Object.assign(heroLeft.style, {
+      flex: '', overflow: '', display: '', flexDirection: '', width: '',
     });
 
-    // Restore visibility
-    globeEl.style.display  = '';
+    // Restore hero text; hide clear row
     heroText.style.display = '';
     closeRow.style.display = 'none';
 
-    // Ensure globe canvas has correct dimensions (keyboard-close resize may have
-    // fired while display:none, setting canvas to 0px). Force renderer to re-measure.
-    const globeCanvas = document.getElementById('globe-canvas-split') as HTMLCanvasElement | null;
-    if (globeCanvas) {
-      globeCanvas.style.width  = '';
-      globeCanvas.style.height = '';
-      globeCanvas.style.opacity = '1';
-      globeCanvas.style.visibility = 'visible';
-    }
-    window.dispatchEvent(new Event('resize'));
-
-    // Scroll to top so the hero (globe + hero text) is visible
-    window.scrollTo({ top: 0, behavior: 'instant' });
-
-    // Restore left panel
-    Object.assign(heroLeft.style, {
-      height: orig.leftHeight, paddingTop: orig.leftPaddingTop,
-      overflow: orig.leftOverflow, display: orig.leftDisplay, flexDirection: orig.leftFlexDir,
-      width: '', maxWidth: '',
-    });
-
-    // Restore chat widget
+    // Restore chat widget sizes
     const chatWrapper = document.getElementById('chat-wrapper');
     const aiChat      = document.getElementById('ai-chat');
-    const aiSpacer    = document.getElementById('ai-spacer');
     const aiMessages  = document.getElementById('ai-messages');
-    if (chatWrapper) Object.assign(chatWrapper.style, { flex: '', overflow: '', display: '', flexDirection: '' });
-    if (aiChat) Object.assign(aiChat.style, { flex: '', display: '', flexDirection: '', overflowY: '' });
-    if (aiSpacer) aiSpacer.style.flex = '';
-    if (aiMessages) Object.assign(aiMessages.style, { flex: '', maxHeight: '' });
+    if (chatWrapper) Object.assign(chatWrapper.style, { flex: '', display: '', flexDirection: '', overflow: '' });
+    if (aiChat)      Object.assign(aiChat.style,      { flex: '', display: '', flexDirection: '', overflowY: '' });
+    if (aiMessages)  aiMessages.style.maxHeight = '';
+
+    // Restore globe with animation
+    const globeCanvas = document.getElementById('globe-canvas-split') as HTMLCanvasElement | null;
+    if (globeCanvas) {
+      globeCanvas.style.width      = '';
+      globeCanvas.style.height     = '';
+      globeCanvas.style.opacity    = '1';
+      globeCanvas.style.visibility = 'visible';
+    }
+    gsap.set(globeEl, { display: '', height: 0, opacity: 0, overflow: 'hidden' });
+    gsap.to(globeEl, {
+      height: globeSavedH || '56vw', opacity: 1, duration: 0.45, ease: 'power2.out',
+      onComplete: () => {
+        gsap.set(globeEl, { clearProps: 'height,opacity,overflow' });
+        window.dispatchEvent(new Event('resize')); // fix globe canvas dimensions
+      },
+    });
+
+    // Clear the conversation
+    document.dispatchEvent(new CustomEvent('chat:clear'));
   }
 
   document.addEventListener('chat:started', expandChat);

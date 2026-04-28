@@ -282,4 +282,25 @@
   document.querySelectorAll<HTMLButtonElement>('.ai-suggestion').forEach((b) => {
     b.addEventListener('click', () => send(b.textContent!.trim()));
   });
+
+  // Reset conversation when "× クリア" is pressed
+  document.addEventListener('chat:clear', () => {
+    messagesEl.innerHTML = '';
+    history.length = 0;
+    chatStarted = false;
+    firstResponseReceived = false;
+
+    greetingEl.style.display  = '';
+    suggestEl.style.display   = '';
+    emailTrigger.classList.add('hidden');
+    emailSection.classList.add('hidden');
+    emailStatus.classList.add('hidden');
+    emailStatus.textContent   = '';
+    emailInput.value          = '';
+    emailInput.disabled       = false;
+
+    inputEl.value             = '';
+    inputEl.blur();
+    setLoading(false);
+  });
 </script>
