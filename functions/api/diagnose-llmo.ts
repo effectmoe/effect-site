@@ -95,7 +95,7 @@ async function analyzeRobots(origin: string) {
 async function analyzeLlms(origin: string) {
   const res = await fetchSafe(`${origin}/llms.txt`);
   if (!res?.ok) {
-    return { exists: false, score: 0, size: 0, entryCount: 0, preview: '', message: 'llms.txtが見つかりません（LLMO対策に必須）' };
+    return { exists: false, score: 0, size: 0, entryCount: 0, preview: '', message: 'llms.txtが見つかりません（設置するとAIへの情報提供に有効）' };
   }
 
   const text = await res.text();
@@ -298,7 +298,7 @@ function emailSymbol(key: string, c: any): { sym: string; color: string; scoreCo
   const W = { sym: '△', color: '#8a6500',  scoreColor: '#8a6500' };
   const B = { sym: '×', color: '#b52020',  scoreColor: '#b52020' };
   switch (key) {
-    case 'llmsTxt':    return !c.exists ? B : c.entryCount >= 5 ? G : W;
+    case 'llmsTxt':    return !c.exists ? W : c.entryCount >= 5 ? G : W;
     case 'robotsTxt':  return !c.exists ? B : c.aiAllowed ? G : (c.blockedBots?.length ?? 0) < 4 ? W : B;
     case 'sitemapXml': return c.exists ? G : B;
     case 'metaTags': {
