@@ -95,7 +95,7 @@ async function analyzeRobots(origin: string) {
 async function analyzeLlms(origin: string) {
   const res = await fetchSafe(`${origin}/llms.txt`);
   if (!res?.ok) {
-    return { exists: false, score: 0, size: 0, entryCount: 0, preview: '', message: 'llms.txtが見つかりません（設置するとAIへの情報提供に有効）' };
+    return { exists: false, score: 0, size: 0, entryCount: 0, preview: '', message: 'llms.txtが見つかりません（今後のAI対策に有効な可能性あり）' };
   }
 
   const text = await res.text();
