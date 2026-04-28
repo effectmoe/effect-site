@@ -14,27 +14,37 @@ const pageUrl = Astro.url.href;
 
 <div class="flex flex-col lg:flex-row">
   <!-- MOBILE: Accordion TOC -->
-  <div class="border-muted-foreground/30 bg-primary-foreground mb-6 border-2 lg:hidden">
+  <div class="mb-6 border border-black/15 bg-white lg:hidden">
     <button
       id="toc-toggle"
-      class="flex w-full items-center justify-between px-4 py-4 font-mono text-sm uppercase"
+      class="flex w-full items-center justify-between px-4 py-3 font-mono text-[11px] tracking-[0.16em] text-black/55 uppercase"
       aria-expanded="false"
     >
-      <span>{t('blog.slug.aside.mobile.nav')}</span>
-      <Icon name="chevron" id="toc-chevron" class="h-6 w-6 -rotate-90 transition-transform duration-300" />
+      <span class="flex items-center gap-2">
+        <span class="inline-block h-3 w-0.5 bg-black/35"></span>
+        {t('blog.slug.aside.mobile.nav')}
+      </span>
+      <Icon name="chevron" id="toc-chevron" class="h-4 w-4 -rotate-90 transition-transform duration-300" />
     </button>
 
     <div id="toc-mobile" class="overflow-hidden" style="max-height: 0; transition: max-height 0.35s ease;">
-      <nav class="px-4 pb-4">
-        <ul class="space-y-3">
+      <nav class="border-t border-black/8">
+        <ul class="divide-y divide-black/6">
           {
             headings.map((heading) => (
               <li>
                 <a
                   href={`#${heading.slug}`}
                   data-toc-mobile-link
-                  class="font-grotesk text-muted block text-sm font-semibold uppercase transition-colors duration-300"
+                  class={`block px-4 py-2.5 font-mono text-xs leading-snug transition-colors duration-200 hover:text-black ${
+                    heading.depth <= 2
+                      ? 'text-black/75 font-semibold uppercase tracking-[0.07em]'
+                      : 'pl-8 text-black/45'
+                  }`}
                 >
+                  {heading.depth >= 3 && (
+                    <span class="mr-1.5 select-none text-black/25">—</span>
+                  )}
                   {heading.text}
                 </a>
               </li>
