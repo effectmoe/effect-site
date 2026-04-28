@@ -13,9 +13,9 @@ import { t } from '@/lib/utils';
     class="bg-background relative z-10 order-2 flex w-full flex-col px-4 pb-6 pt-5 lg:order-1 lg:h-full lg:w-1/2 lg:justify-between lg:px-14 lg:pt-16 lg:pb-14"
   >
     <!-- Mobile close row (hidden until chat active) -->
-    <div id="hero-chat-close-row" class="mb-3 items-center justify-between" style="display:none;">
-      <span class="font-mono text-[10px] tracking-[0.18em] text-black/40 uppercase">Effect AI</span>
-      <button id="hero-chat-close-btn" class="font-mono text-[10px] tracking-[0.18em] text-black/40 uppercase transition-colors hover:text-black">
+    <div id="hero-chat-close-row" class="mb-4 items-center justify-between border-b border-black/10 pb-3" style="display:none;">
+      <a href="/" class="font-clash text-xl leading-none text-black/80 transition-opacity hover:opacity-50">EFFECT</a>
+      <button id="hero-chat-close-btn" class="font-mono text-[10px] tracking-[0.18em] text-black/35 uppercase transition-colors hover:text-black">
         × 閉じる
       </button>
     </div>
@@ -154,10 +154,12 @@ import { t } from '@/lib/utils';
     // Show close row
     closeRow.style.display = 'flex';
 
-    // Expand chat widget to fill panel
-    const aiChat     = document.getElementById('ai-chat');
-    const aiMessages = document.getElementById('ai-messages');
-    if (aiChat) Object.assign(aiChat.style, { flex: '1', display: 'flex', flexDirection: 'column', overflow: 'hidden' });
+    // Expand chat wrapper and widget to fill panel
+    const chatWrapper = document.getElementById('chat-wrapper');
+    const aiChat      = document.getElementById('ai-chat');
+    const aiMessages  = document.getElementById('ai-messages');
+    if (chatWrapper) Object.assign(chatWrapper.style, { flex: '1', overflow: 'hidden', display: 'flex', flexDirection: 'column' });
+    if (aiChat) Object.assign(aiChat.style, { flex: '1', display: 'flex', flexDirection: 'column', overflowY: 'auto' });
     if (aiMessages) Object.assign(aiMessages.style, { flex: '1', maxHeight: 'none' });
   }
 
@@ -180,9 +182,11 @@ import { t } from '@/lib/utils';
     });
 
     // Restore chat widget
-    const aiChat     = document.getElementById('ai-chat');
-    const aiMessages = document.getElementById('ai-messages');
-    if (aiChat) Object.assign(aiChat.style, { flex: '', display: '', flexDirection: '', overflow: '' });
+    const chatWrapper = document.getElementById('chat-wrapper');
+    const aiChat      = document.getElementById('ai-chat');
+    const aiMessages  = document.getElementById('ai-messages');
+    if (chatWrapper) Object.assign(chatWrapper.style, { flex: '', overflow: '', display: '', flexDirection: '' });
+    if (aiChat) Object.assign(aiChat.style, { flex: '', display: '', flexDirection: '', overflowY: '' });
     if (aiMessages) Object.assign(aiMessages.style, { flex: '', maxHeight: '' });
   }
 
