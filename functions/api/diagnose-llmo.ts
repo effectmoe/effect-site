@@ -101,10 +101,14 @@ async function analyzeLlms(origin: string) {
   const size = new TextEncoder().encode(text).length;
   const entries = text.split('\n').filter(l => l.trim() && !l.startsWith('#'));
 
-  let score = 28;
-  if (entries.length >= 5) score += 8;
-  else if (entries.length > 0) score += 4;
-  if (size > 300) score += 4;
+  if (size === 0 || entries.length === 0) {
+    return { exists: false, score: 0, size: 0, entryCount: 0, preview: '', message: 'llms.txtが空です（コンテンツの追加が必要です）' };
+  }
+
+  let score = 20;
+  if (entries.length >= 5) score += 12;
+  else if (entries.length > 0) score += 8;
+  if (size > 500) score += 8;
 
   return {
     exists: true,
