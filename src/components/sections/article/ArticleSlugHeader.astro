@@ -1,0 +1,73 @@
+---
+import MarqueeText from '@/components/common/MarqueeText.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  date?: Date;
+  category?: string;
+  tags?: string[];
+  heroImage?: string;
+}
+
+const { title, description, date, category, tags, heroImage } = Astro.props;
+
+const formattedDate = date ? new Date(date).toLocaleDateString('ja-JP', {
+  year: 'numeric', month: 'long', day: 'numeric',
+}) : '';
+---
+
+<div class="flex w-full flex-col gap-6 lg:flex-row">
+  <div class="flex w-full flex-col gap-0.5 space-y-6 lg:w-1/2">
+    <div class="space-y-3 md:space-y-5">
+      <div>
+        <MarqueeText text="Article" />
+      </div>
+      <h1 class="font-clash text-4xl md:text-6xl lg:text-7xl">
+        {title}
+      </h1>
+    </div>
+
+    {tags && tags.length > 0 && (
+      <div class="mt-6 flex flex-wrap gap-2">
+        {tags.map((tag) => (
+          <span class="text-primary-foreground bg-primary px-3 py-2 font-mono text-xs tracking-widest uppercase">
+            {tag}
+          </span>
+        ))}
+      </div>
+    )}
+
+    <div class="bg-muted-foreground/30 grid grid-cols-1 gap-0.5 p-0.5 lg:grid-cols-3">
+      {formattedDate && (
+        <div class="bg-primary-foreground flex flex-col justify-center p-4 md:p-6">
+          <p class="text-muted mb-2 font-mono text-sm uppercase">公開日</p>
+          <p class="text-base tracking-wide">{formattedDate}</p>
+        </div>
+      )}
+      {category && (
+        <div class="bg-primary-foreground flex flex-col justify-center p-4 md:p-6">
+          <p class="text-muted mb-2 font-mono text-sm uppercase">カテゴリ</p>
+          <p class="text-base tracking-wide uppercase">{category}</p>
+        </div>
+      )}
+      {description && (
+        <div class="bg-primary-foreground flex flex-col justify-center p-4 md:p-6 lg:col-span-1">
+          <p class="text-muted mb-2 font-mono text-sm uppercase">概要</p>
+          <p class="text-sm leading-relaxed">{description}</p>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {heroImage && (
+    <div class="relative flex min-h-[400px] w-full lg:w-1/2">
+      <img
+        src={heroImage}
+        alt={title}
+        class="absolute inset-0 h-full w-full rounded-md object-cover"
+        loading="eager"
+      />
+    </div>
+  )}
+</div>

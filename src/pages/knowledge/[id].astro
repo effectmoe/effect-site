@@ -1,0 +1,35 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import ArticleSlugHeader from '@/components/sections/article/ArticleSlugHeader.astro';
+import BlogSlugContent from '@/components/sections/blog/BlogSlugContent.astro';
+import Button from '@/components/ui/Button.astro';
+import { Icon } from 'astro-icon/components';
+
+export const prerender = true;
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection('knowledge', ({ data }) => !data.draft);
+  return entries.map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}) satisfies GetStaticPaths;
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const { title, description, date, category, tags, heroImage } = entry.data;
+---
+
+<Layout title={title} description={description}>
+  <article class="container mx-auto space-y-6 px-4 py-20 md:space-y-16 md:py-28">
+    <Button href="/knowledge" variant="primary" size="sm">
+      <Icon name="chevron" class="h-4 w-4" />ナレッジ一覧へ
+    </Button>
+    <ArticleSlugHeader {title} {description} {date} {category} {tags} {heroImage} />
+    <BlogSlugContent {headings}>
+      <Content />
+    </BlogSlugContent>
+  </article>
+</Layout>

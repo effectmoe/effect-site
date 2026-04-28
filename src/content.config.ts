@@ -48,4 +48,42 @@ const legals = defineCollection({
   }),
 });
 
-export const collections = { projects, blogs, legals };
+const articles = defineCollection({
+  loader: glob({
+    base: './src/content/articles',
+    pattern: '**/*.{md,mdx}'
+  }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    date: z.coerce.date().optional(),
+    updated: z.coerce.date().optional(),
+    category: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+    domain: z.string().optional(),
+    heroImage: z.string().optional(),
+    draft: z.boolean().default(false),
+  }),
+});
+
+const knowledge = defineCollection({
+  loader: glob({
+    base: './src/content/knowledge',
+    pattern: '**/*.{md,mdx}'
+  }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    date: z.coerce.date().optional(),
+    updated: z.coerce.date().optional(),
+    category: z.string().optional(),
+    tags: z.array(z.string()).default([]),
+    domain: z.string().optional(),
+    heroImage: z.string().optional(),
+    sources: z.array(z.string()).default([]),
+    related: z.array(z.string()).default([]),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { projects, blogs, legals, articles, knowledge };
