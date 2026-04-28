@@ -5,18 +5,26 @@ import AiChatWidget from './AiChatWidget.astro';
 import { t } from '@/lib/utils';
 ---
 
-<div class="relative flex min-h-dvh w-full flex-col overflow-hidden lg:h-dvh lg:flex-row">
+<div id="hero-outer" class="relative flex min-h-dvh w-full flex-col overflow-hidden lg:h-dvh lg:flex-row">
+
+  <!-- Mobile close button (shown only when chat is active) -->
+  <button id="hero-chat-close" aria-label="閉じる"
+    class="bg-background fixed top-3 right-4 z-[60] hidden items-center gap-2 font-mono text-[10px] tracking-[0.18em] text-black/40 uppercase hover:text-black lg:hidden">
+    <span>× 閉じる</span>
+  </button>
+
   <!-- Left Side: Info -->
   <div
+    id="hero-left"
     class="bg-background relative z-10 order-2 flex w-full flex-col px-4 pb-6 pt-5 lg:order-1 lg:h-full lg:w-1/2 lg:justify-between lg:px-14 lg:pt-16 lg:pb-14"
   >
-    <!-- AI Chat (desktop: fills upper area / mobile: compact above hero text) -->
+    <!-- AI Chat -->
     <div class="lg:flex-1 lg:overflow-hidden">
       <AiChatWidget />
     </div>
 
     <!-- Hero text -->
-    <div class="mt-4 flex max-w-5xl flex-col gap-4 lg:mt-0 lg:shrink-0 lg:gap-6">
+    <div id="hero-text-section" class="mt-4 flex max-w-5xl flex-col gap-4 lg:mt-0 lg:shrink-0 lg:gap-6">
       <div id="hero-marquee-split" class="hidden xl:block" style="visibility: hidden;">
         <MarqueeText text={t('index.hero.marqueetext')} />
       </div>
@@ -61,6 +69,32 @@ import { t } from '@/lib/utils';
   </div>
 </div>
 
+<style>
+  /* Mobile: chat-active → full-screen chat overlay */
+  @media (max-width: 1023px) {
+    #hero-outer.chat-active {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      overflow: hidden;
+    }
+    #hero-outer.chat-active #globe-container {
+      display: none;
+    }
+    #hero-outer.chat-active #hero-left {
+      order: 1;
+      height: 100dvh;
+      padding-top: 2.75rem;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #hero-outer.chat-active #hero-text-section {
+      display: none;
+    }
+  }
+</style>
+
 <script>
   import gsap from 'gsap';
   import { GlobeRenderer } from './globe.ts';
@@ -82,47 +116,67 @@ import { t } from '@/lib/utils';
     gsap.set([marquee, h1, description, btn], { y: 28, opacity: 0 });
     gsap.set(coords, { opacity: 0 });
     gsap.set(canvas, { opacity: 0, scale: 1.04 });
-
     gsap.set([canvas, marquee, h1, description, btn, coords], { visibility: 'visible' });
 
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-
-    tl.to(canvas, {
-      opacity: 1,
-      scale: 1,
-      duration: 1.4,
-      ease: 'power2.out',
-    })
+    tl.to(canvas, { opacity: 1, scale: 1, duration: 1.4, ease: 'power2.out' })
       .to(marquee, { y: 0, opacity: 1, duration: 0.7 }, '-=0.8')
       .to(h1, { y: 0, opacity: 1, duration: 0.85, ease: 'power4.out' }, '-=0.55')
       .to(description, { y: 0, opacity: 1, duration: 0.7 }, '-=0.5')
       .to(btn, { y: 0, opacity: 1, duration: 0.6 }, '-=0.45')
       .to(coords, { opacity: 1, duration: 0.8 }, '-=0.6');
 
-    // Performance Optimization: Pause rendering when off-screen
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            renderer.resume();
-          } else {
-            renderer.pause();
-          }
-        });
-      },
-      { threshold: 0 }, // Trigger as soon as 1px is visible or it fully leaves
+      (entries) => entries.forEach((e) => e.isIntersecting ? renderer.resume() : renderer.pause()),
+      { threshold: 0 },
     );
-
     const container = document.getElementById('globe-container');
     if (container) observer.observe(container);
 
-    document.addEventListener(
-      'astro:before-swap',
-      () => {
-        observer.disconnect();
-        renderer.destroy();
-      },
-      { once: true },
-    );
+    document.addEventListener('astro:before-swap', () => {
+      observer.disconnect();
+      renderer.destroy();
+    }, { once: true });
   }
+
+  // ── Mobile chat expansion ───────────────────────────────────
+  const heroOuter    = document.getElementById('hero-outer');
+  const heroLeft     = document.getElementById('hero-left');
+  const chatCloseBtn = document.getElementById('hero-chat-close');
+
+  function expandChat() {
+    if (window.innerWidth >= 1024) return;
+    heroOuter?.classList.add('chat-active');
+    chatCloseBtn?.classList.remove('hidden');
+    chatCloseBtn?.classList.add('flex');
+
+    // Let the chat fill the left panel
+    const aiChat = document.getElementById('ai-chat') as HTMLElement | null;
+    if (aiChat) {
+      aiChat.style.flex = '1';
+      aiChat.style.display = 'flex';
+      aiChat.style.flexDirection = 'column';
+      aiChat.style.overflow = 'hidden';
+    }
+    const aiMessages = document.getElementById('ai-messages') as HTMLElement | null;
+    if (aiMessages) {
+      aiMessages.style.flex = '1';
+      aiMessages.style.maxHeight = 'none';
+    }
+  }
+
+  function collapseChat() {
+    heroOuter?.classList.remove('chat-active');
+    chatCloseBtn?.classList.add('hidden');
+    chatCloseBtn?.classList.remove('flex');
+
+    const aiChat = document.getElementById('ai-chat') as HTMLElement | null;
+    if (aiChat) { aiChat.style.flex = ''; aiChat.style.display = ''; aiChat.style.flexDirection = ''; aiChat.style.overflow = ''; }
+    const aiMessages = document.getElementById('ai-messages') as HTMLElement | null;
+    if (aiMessages) { aiMessages.style.flex = ''; aiMessages.style.maxHeight = ''; }
+  }
+
+  document.addEventListener('chat:started', expandChat);
+  chatCloseBtn?.addEventListener('click', collapseChat);
+  // ───────────────────────────────────────────────────────────
 </script>
