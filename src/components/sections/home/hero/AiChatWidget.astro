@@ -8,26 +8,20 @@
   </div>
 
   <!-- Conversation -->
-  <div id="ai-messages" class="space-y-4 overflow-y-auto pr-1 lg:space-y-5" style="scrollbar-width: none;">
-    <div class="ai-msg" data-role="assistant">
-      <p class="font-mono text-xs leading-[1.8] text-black/40">
-        LLMO・AIコンテンツ戦略・EFFECTのサービスについて<br class="hidden lg:block">
-        何でもご質問ください。
-      </p>
-    </div>
+  <div id="ai-messages" class="space-y-4 overflow-y-auto pr-1 lg:space-y-5" style="scrollbar-width: none;"></div>
+
+  <!-- Initial greeting (hidden once chat starts) -->
+  <div id="ai-greeting" class="mt-1">
+    <p class="font-mono text-xs leading-[1.8] text-black/40">
+      LLMO・AIコンテンツ戦略・EFFECTのサービスについて何でもご質問ください。
+    </p>
   </div>
 
   <!-- Suggestions -->
   <div id="ai-suggestions" class="mt-3 flex flex-wrap gap-x-3 gap-y-1 lg:mt-4 lg:gap-x-4">
-    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">
-      LLMOとは？
-    </button>
-    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">
-      EFFECTに依頼するには
-    </button>
-    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">
-      AIコンテンツ戦略
-    </button>
+    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">LLMOとは？</button>
+    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">EFFECTに依頼するには</button>
+    <button class="ai-suggestion font-mono text-[10px] tracking-widest text-black/30 uppercase transition-colors hover:text-black">AIコンテンツ戦略</button>
   </div>
 
   <!-- Input -->
@@ -39,40 +33,37 @@
       maxlength="200"
       class="flex-1 bg-transparent font-mono text-xs text-black outline-none placeholder:text-black/25"
     />
-    <button
-      id="ai-send"
-      aria-label="送信"
-      class="font-mono text-xs text-black/30 transition-colors hover:text-black"
-    >
-      →
-    </button>
+    <button id="ai-send" aria-label="送信" class="font-mono text-xs text-black/30 transition-colors hover:text-black">→</button>
+  </div>
+
+  <!-- Email log collection (shown after first AI response) -->
+  <div id="ai-email-section" class="mt-4 hidden">
+    <div id="ai-email-form" class="flex items-center gap-3 border-b border-black/10 pb-2">
+      <input
+        id="ai-email-input"
+        type="email"
+        placeholder="会話ログをメールで受け取る..."
+        class="flex-1 bg-transparent font-mono text-xs text-black/50 outline-none placeholder:text-black/20"
+      />
+      <button id="ai-email-send" aria-label="送信" class="font-mono text-xs text-black/25 transition-colors hover:text-black/60">→</button>
+    </div>
+    <p id="ai-email-status" class="mt-1 hidden font-mono text-[10px] text-black/35"></p>
   </div>
 </div>
 
 <style>
-  /* Desktop: tall message area */
   @media (min-width: 1024px) {
     #ai-messages { max-height: 240px; }
     #ai-chat { border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 2.5rem; }
   }
-  /* Mobile: compact — just enough for a couple messages */
   @media (max-width: 1023px) {
     #ai-messages { max-height: 72px; }
     #ai-chat { padding-bottom: 1rem; margin-bottom: 1.25rem; }
   }
 
-  .ai-msg[data-role="user"] p {
-    color: rgba(0,0,0,0.75);
-    text-align: right;
-  }
-  .ai-msg[data-role="user"] {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .ai-msg[data-role="assistant"] p {
-    color: rgba(0,0,0,0.45);
-  }
+  .ai-msg[data-role="user"] p { color: rgba(0,0,0,0.75); text-align: right; }
+  .ai-msg[data-role="user"] { display: flex; justify-content: flex-end; }
+  .ai-msg[data-role="assistant"] p { color: rgba(0,0,0,0.45); }
 
   .typing::after {
     content: '▋';
@@ -82,19 +73,25 @@
   @keyframes blink { 0%,100%{opacity:0.4} 50%{opacity:0} }
 
   #ai-messages::-webkit-scrollbar { display: none; }
-
   #ai-input::placeholder { color: rgba(0,0,0,0.25); }
   #ai-input.animating::placeholder { color: rgba(0,0,0,0.35); }
 </style>
 
 <script>
-  const messagesEl = document.getElementById('ai-messages')!;
-  const inputEl    = document.getElementById('ai-input') as HTMLInputElement;
-  const sendBtn    = document.getElementById('ai-send')!;
-  const statusDot  = document.getElementById('ai-status')!;
-  const suggestEl  = document.getElementById('ai-suggestions')!;
+  const messagesEl  = document.getElementById('ai-messages')!;
+  const inputEl     = document.getElementById('ai-input') as HTMLInputElement;
+  const sendBtn     = document.getElementById('ai-send')!;
+  const statusDot   = document.getElementById('ai-status')!;
+  const suggestEl   = document.getElementById('ai-suggestions')!;
+  const greetingEl  = document.getElementById('ai-greeting')!;
+  const emailSection = document.getElementById('ai-email-section')!;
+  const emailInput  = document.getElementById('ai-email-input') as HTMLInputElement;
+  const emailSend   = document.getElementById('ai-email-send')!;
+  const emailStatus = document.getElementById('ai-email-status')!;
 
   const history: { role: 'user'|'assistant'; content: string }[] = [];
+  let chatStarted = false;
+  let firstResponseReceived = false;
 
   // ── Typewriter placeholder ────────────────────────────────
   const questions = [
@@ -105,53 +102,34 @@
     'コンテンツ戦略の始め方',
     'AIがブランドを認識する仕組みは？',
   ];
-
-  let qIdx = 0;
-  let charIdx = 0;
-  let deleting = false;
+  let qIdx = 0, charIdx = 0, deleting = false;
   let animFrame: ReturnType<typeof setTimeout>;
   let isUserFocused = false;
 
   function typeStep() {
     if (isUserFocused || inputEl.value) return;
-
     const q = questions[qIdx];
-
     if (!deleting) {
       charIdx++;
       inputEl.placeholder = q.slice(0, charIdx);
-      if (charIdx === q.length) {
-        deleting = true;
-        animFrame = setTimeout(typeStep, 2200);
-        return;
-      }
+      if (charIdx === q.length) { deleting = true; animFrame = setTimeout(typeStep, 2200); return; }
       animFrame = setTimeout(typeStep, 65);
     } else {
       charIdx--;
       inputEl.placeholder = q.slice(0, charIdx);
-      if (charIdx === 0) {
-        deleting = false;
-        qIdx = (qIdx + 1) % questions.length;
-        animFrame = setTimeout(typeStep, 400);
-        return;
-      }
+      if (charIdx === 0) { deleting = false; qIdx = (qIdx + 1) % questions.length; animFrame = setTimeout(typeStep, 400); return; }
       animFrame = setTimeout(typeStep, 28);
     }
   }
-
   setTimeout(() => { inputEl.classList.add('animating'); typeStep(); }, 1200);
 
   inputEl.addEventListener('focus', () => {
-    isUserFocused = true;
-    clearTimeout(animFrame);
-    inputEl.placeholder = '質問を入力...';
-    inputEl.classList.remove('animating');
+    isUserFocused = true; clearTimeout(animFrame);
+    inputEl.placeholder = '質問を入力...'; inputEl.classList.remove('animating');
   });
   inputEl.addEventListener('blur', () => {
     if (!inputEl.value) {
-      isUserFocused = false;
-      charIdx = 0;
-      deleting = false;
+      isUserFocused = false; charIdx = 0; deleting = false;
       setTimeout(() => { inputEl.classList.add('animating'); typeStep(); }, 800);
     }
   });
@@ -159,8 +137,7 @@
 
   function addMsg(role: 'user'|'assistant', text = '') {
     const div = document.createElement('div');
-    div.className = 'ai-msg';
-    div.dataset.role = role;
+    div.className = 'ai-msg'; div.dataset.role = role;
     const p = document.createElement('p');
     p.className = 'font-mono text-xs leading-[1.8]';
     if (role === 'user') {
@@ -184,7 +161,15 @@
 
   async function send(text: string) {
     if (!text.trim() || inputEl.disabled) return;
-    suggestEl.style.display = 'none';
+
+    // First message: trigger mobile expansion
+    if (!chatStarted) {
+      chatStarted = true;
+      greetingEl.style.display = 'none';
+      suggestEl.style.display = 'none';
+      document.dispatchEvent(new CustomEvent('chat:started'));
+    }
+
     addMsg('user', text);
     history.push({ role: 'user', content: text });
     inputEl.value = '';
@@ -222,6 +207,12 @@
         }
       }
       history.push({ role: 'assistant', content: full });
+
+      // Show email section after first AI response
+      if (!firstResponseReceived && full) {
+        firstResponseReceived = true;
+        emailSection.classList.remove('hidden');
+      }
     } catch {
       p.textContent = '接続エラー。しばらくしてから再試行してください。';
     } finally {
@@ -231,16 +222,53 @@
     }
   }
 
+  // ── Email log submission ──────────────────────────────────
+  async function sendEmailLog() {
+    const email = emailInput.value.trim();
+    if (!email || !email.includes('@')) {
+      emailStatus.textContent = 'メールアドレスを正しく入力してください。';
+      emailStatus.classList.remove('hidden');
+      return;
+    }
+    emailSend.toggleAttribute('disabled', true);
+    emailStatus.textContent = '送信中...';
+    emailStatus.classList.remove('hidden');
+
+    try {
+      const res = await fetch('/api/save-conversation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history, email }),
+      });
+      if (res.ok) {
+        emailStatus.textContent = '送信しました。ご確認ください。';
+        emailInput.value = '';
+        emailInput.disabled = true;
+        emailSend.setAttribute('disabled', '');
+      } else {
+        throw new Error();
+      }
+    } catch {
+      emailStatus.textContent = '送信に失敗しました。';
+      emailSend.removeAttribute('disabled');
+    }
+  }
+
+  emailSend.addEventListener('click', sendEmailLog);
+  emailInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); sendEmailLog(); }
+  });
+  // ─────────────────────────────────────────────────────────
+
   sendBtn.addEventListener('click', () => send(inputEl.value));
 
-  // ── IME（日本語入力）対応 ─────────────────────────────────
+  // IME（日本語入力）対応
   let isComposing = false;
   inputEl.addEventListener('compositionstart', () => { isComposing = true; });
   inputEl.addEventListener('compositionend', () => { isComposing = false; });
   inputEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !isComposing) { e.preventDefault(); send(inputEl.value); }
   });
-  // ─────────────────────────────────────────────────────────
 
   document.querySelectorAll<HTMLButtonElement>('.ai-suggestion').forEach((b) => {
     b.addEventListener('click', () => send(b.textContent!.trim()));
