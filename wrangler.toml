@@ -14,3 +14,6 @@ bucket_name = "effect-ai-crawler-logs"
 
 [ai]
 binding = "AI"
+
+[vars]
+GAS_GMAIL_URL = "https://script.google.com/macros/s/AKfycbz-f7kGQZEUX4ZnaaoN1ieAoMBvstxtVXHFVInUNokjf1pTEEW5Sw7N_Bi8ZtUFama_/exec"

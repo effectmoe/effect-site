@@ -7,19 +7,21 @@ import { t } from '@/lib/utils';
 
 <div id="hero-outer" class="relative flex min-h-dvh w-full flex-col overflow-hidden lg:h-dvh lg:flex-row">
 
-  <!-- Mobile close button (shown only when chat is active) -->
-  <button id="hero-chat-close" aria-label="閉じる"
-    class="bg-background fixed top-3 right-4 z-[60] hidden items-center gap-2 font-mono text-[10px] tracking-[0.18em] text-black/40 uppercase hover:text-black lg:hidden">
-    <span>× 閉じる</span>
-  </button>
-
   <!-- Left Side: Info -->
   <div
     id="hero-left"
     class="bg-background relative z-10 order-2 flex w-full flex-col px-4 pb-6 pt-5 lg:order-1 lg:h-full lg:w-1/2 lg:justify-between lg:px-14 lg:pt-16 lg:pb-14"
   >
+    <!-- Mobile close row (hidden until chat active) -->
+    <div id="hero-chat-close-row" class="mb-3 items-center justify-between" style="display:none;">
+      <span class="font-mono text-[10px] tracking-[0.18em] text-black/40 uppercase">Effect AI</span>
+      <button id="hero-chat-close-btn" class="font-mono text-[10px] tracking-[0.18em] text-black/40 uppercase transition-colors hover:text-black">
+        × 閉じる
+      </button>
+    </div>
+
     <!-- AI Chat -->
-    <div class="lg:flex-1 lg:overflow-hidden">
+    <div id="chat-wrapper" class="lg:flex-1 lg:overflow-hidden">
       <AiChatWidget />
     </div>
 
@@ -56,8 +58,6 @@ import { t } from '@/lib/utils';
       id="globe-canvas-split"
       class="absolute inset-0 block size-full will-change-transform"
       style="visibility: hidden; opacity: 0;"></canvas>
-
-    <!-- Coords overlay on globe side -->
     <div
       id="hero-coords-split"
       class="absolute right-[3vw] bottom-[5vh] z-10 font-mono text-xs leading-[1.9] tracking-[0.14em] max-md:hidden"
@@ -69,49 +69,24 @@ import { t } from '@/lib/utils';
   </div>
 </div>
 
-<style>
-  /* Mobile: chat-active → full-screen chat overlay */
-  @media (max-width: 1023px) {
-    #hero-outer.chat-active {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      overflow: hidden;
-    }
-    #hero-outer.chat-active #globe-container {
-      display: none;
-    }
-    #hero-outer.chat-active #hero-left {
-      order: 1;
-      height: 100dvh;
-      padding-top: 2.75rem;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    #hero-outer.chat-active #hero-text-section {
-      display: none;
-    }
-  }
-</style>
-
 <script>
   import gsap from 'gsap';
   import { GlobeRenderer } from './globe.ts';
 
+  // ── Globe animation ─────────────────────────────────────────
   const canvas = document.getElementById('globe-canvas-split') as HTMLCanvasElement;
-  const lonEl = document.getElementById('globe-lon-split') as HTMLElement;
+  const lonEl  = document.getElementById('globe-lon-split') as HTMLElement;
 
   if (canvas && lonEl) {
     const renderer = new GlobeRenderer(canvas, {}, (deg: number) => {
       lonEl.textContent = `LON ${String(deg.toFixed(1)).padStart(5, '0')}°`;
     });
 
-    const marquee = document.getElementById('hero-marquee-split');
-    const h1 = document.getElementById('hero-h1-split');
+    const marquee     = document.getElementById('hero-marquee-split');
+    const h1          = document.getElementById('hero-h1-split');
     const description = document.getElementById('hero-description-split');
-    const btn = document.getElementById('hero-btn-split');
-    const coords = document.getElementById('hero-coords-split');
+    const btn         = document.getElementById('hero-btn-split');
+    const coords      = document.getElementById('hero-coords-split');
 
     gsap.set([marquee, h1, description, btn], { y: 28, opacity: 0 });
     gsap.set(coords, { opacity: 0 });
@@ -120,18 +95,18 @@ import { t } from '@/lib/utils';
 
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
     tl.to(canvas, { opacity: 1, scale: 1, duration: 1.4, ease: 'power2.out' })
-      .to(marquee, { y: 0, opacity: 1, duration: 0.7 }, '-=0.8')
-      .to(h1, { y: 0, opacity: 1, duration: 0.85, ease: 'power4.out' }, '-=0.55')
-      .to(description, { y: 0, opacity: 1, duration: 0.7 }, '-=0.5')
-      .to(btn, { y: 0, opacity: 1, duration: 0.6 }, '-=0.45')
-      .to(coords, { opacity: 1, duration: 0.8 }, '-=0.6');
+      .to(marquee,      { y: 0, opacity: 1, duration: 0.7 }, '-=0.8')
+      .to(h1,           { y: 0, opacity: 1, duration: 0.85, ease: 'power4.out' }, '-=0.55')
+      .to(description,  { y: 0, opacity: 1, duration: 0.7 }, '-=0.5')
+      .to(btn,          { y: 0, opacity: 1, duration: 0.6 }, '-=0.45')
+      .to(coords,       { opacity: 1, duration: 0.8 }, '-=0.6');
 
     const observer = new IntersectionObserver(
       (entries) => entries.forEach((e) => e.isIntersecting ? renderer.resume() : renderer.pause()),
       { threshold: 0 },
     );
-    const container = document.getElementById('globe-container');
-    if (container) observer.observe(container);
+    const globeContainer = document.getElementById('globe-container');
+    if (globeContainer) observer.observe(globeContainer);
 
     document.addEventListener('astro:before-swap', () => {
       observer.disconnect();
@@ -139,44 +114,79 @@ import { t } from '@/lib/utils';
     }, { once: true });
   }
 
-  // ── Mobile chat expansion ───────────────────────────────────
-  const heroOuter    = document.getElementById('hero-outer');
-  const heroLeft     = document.getElementById('hero-left');
-  const chatCloseBtn = document.getElementById('hero-chat-close');
+  // ── Mobile chat expansion (pure inline styles — avoids Astro CSS scoping) ──
+  const heroOuter    = document.getElementById('hero-outer')!;
+  const heroLeft     = document.getElementById('hero-left')!;
+  const heroText     = document.getElementById('hero-text-section')!;
+  const globeEl      = document.getElementById('globe-container')!;
+  const closeRow     = document.getElementById('hero-chat-close-row')!;
+  const closeBtn     = document.getElementById('hero-chat-close-btn')!;
+
+  // Store original inline styles for restoration
+  const orig = {
+    outerPosition:   heroOuter.style.position,
+    outerInset:      heroOuter.style.inset,
+    outerZIndex:     heroOuter.style.zIndex,
+    outerOverflow:   heroOuter.style.overflow,
+    leftHeight:      heroLeft.style.height,
+    leftPaddingTop:  heroLeft.style.paddingTop,
+    leftOverflow:    heroLeft.style.overflow,
+    leftDisplay:     heroLeft.style.display,
+    leftFlexDir:     heroLeft.style.flexDirection,
+  };
 
   function expandChat() {
     if (window.innerWidth >= 1024) return;
-    heroOuter?.classList.add('chat-active');
-    chatCloseBtn?.classList.remove('hidden');
-    chatCloseBtn?.classList.add('flex');
 
-    // Let the chat fill the left panel
-    const aiChat = document.getElementById('ai-chat') as HTMLElement | null;
-    if (aiChat) {
-      aiChat.style.flex = '1';
-      aiChat.style.display = 'flex';
-      aiChat.style.flexDirection = 'column';
-      aiChat.style.overflow = 'hidden';
-    }
-    const aiMessages = document.getElementById('ai-messages') as HTMLElement | null;
-    if (aiMessages) {
-      aiMessages.style.flex = '1';
-      aiMessages.style.maxHeight = 'none';
-    }
+    // Full-screen overlay
+    Object.assign(heroOuter.style, { position: 'fixed', inset: '0', zIndex: '50', overflow: 'hidden' });
+
+    // Hide globe and hero text
+    globeEl.style.display  = 'none';
+    heroText.style.display = 'none';
+
+    // Left panel fills viewport
+    Object.assign(heroLeft.style, {
+      height: '100dvh', paddingTop: '2.75rem',
+      overflow: 'hidden', display: 'flex', flexDirection: 'column',
+    });
+
+    // Show close row
+    closeRow.style.display = 'flex';
+
+    // Expand chat widget to fill panel
+    const aiChat     = document.getElementById('ai-chat');
+    const aiMessages = document.getElementById('ai-messages');
+    if (aiChat) Object.assign(aiChat.style, { flex: '1', display: 'flex', flexDirection: 'column', overflow: 'hidden' });
+    if (aiMessages) Object.assign(aiMessages.style, { flex: '1', maxHeight: 'none' });
   }
 
   function collapseChat() {
-    heroOuter?.classList.remove('chat-active');
-    chatCloseBtn?.classList.add('hidden');
-    chatCloseBtn?.classList.remove('flex');
+    // Restore outer
+    Object.assign(heroOuter.style, {
+      position: orig.outerPosition, inset: orig.outerInset,
+      zIndex: orig.outerZIndex, overflow: orig.outerOverflow,
+    });
 
-    const aiChat = document.getElementById('ai-chat') as HTMLElement | null;
-    if (aiChat) { aiChat.style.flex = ''; aiChat.style.display = ''; aiChat.style.flexDirection = ''; aiChat.style.overflow = ''; }
-    const aiMessages = document.getElementById('ai-messages') as HTMLElement | null;
-    if (aiMessages) { aiMessages.style.flex = ''; aiMessages.style.maxHeight = ''; }
+    // Restore visibility
+    globeEl.style.display  = '';
+    heroText.style.display = '';
+    closeRow.style.display = 'none';
+
+    // Restore left panel
+    Object.assign(heroLeft.style, {
+      height: orig.leftHeight, paddingTop: orig.leftPaddingTop,
+      overflow: orig.leftOverflow, display: orig.leftDisplay, flexDirection: orig.leftFlexDir,
+    });
+
+    // Restore chat widget
+    const aiChat     = document.getElementById('ai-chat');
+    const aiMessages = document.getElementById('ai-messages');
+    if (aiChat) Object.assign(aiChat.style, { flex: '', display: '', flexDirection: '', overflow: '' });
+    if (aiMessages) Object.assign(aiMessages.style, { flex: '', maxHeight: '' });
   }
 
   document.addEventListener('chat:started', expandChat);
-  chatCloseBtn?.addEventListener('click', collapseChat);
-  // ───────────────────────────────────────────────────────────
+  closeBtn.addEventListener('click', collapseChat);
+  // ────────────────────────────────────────────────────────────
 </script>
