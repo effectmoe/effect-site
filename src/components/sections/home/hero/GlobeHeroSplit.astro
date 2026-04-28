@@ -6,13 +6,19 @@ import LlmoDiagnosisWidget from './LlmoDiagnosisWidget.astro';
 import { t } from '@/lib/utils';
 ---
 
-<div id="hero-outer" class="relative flex w-full flex-col overflow-hidden lg:h-dvh lg:flex-row">
+<!--
+  Layout logic:
+  - Mobile (< lg): flex-col — globe stacked above hero content, both in normal flow
+  - Desktop (lg+):  hero-left determines section height (content-driven, no h-dvh forcing)
+                    globe is absolute-positioned to fill the right half of whatever height hero-left creates
+                    → eliminates the left-column whitespace caused by fixed height constraints
+-->
+<div id="hero-outer" class="relative flex w-full flex-col overflow-x-hidden lg:flex-row">
 
-  <!-- Left Side: Info -->
+  <!-- Left Side: content drives the section height on desktop -->
   <div
     id="hero-left"
-    class="bg-background relative z-10 order-2 flex w-full flex-col px-4 pb-6 pt-5 lg:order-1 lg:h-full lg:w-1/2 lg:overflow-y-auto lg:px-14 lg:pt-14 lg:pb-12"
-    style="scrollbar-width: none;"
+    class="bg-background relative z-10 order-2 flex w-full flex-col gap-5 px-4 pb-10 pt-5 lg:order-1 lg:w-1/2 lg:gap-6 lg:px-14 lg:pt-14 lg:pb-16"
   >
     <!-- AI Chat -->
     <div id="chat-wrapper">
@@ -20,15 +26,12 @@ import { t } from '@/lib/utils';
     </div>
 
     <!-- LLMO Diagnosis Widget -->
-    <div id="diagnosis-wrapper" class="mt-4 lg:mt-5">
+    <div id="diagnosis-wrapper">
       <LlmoDiagnosisWidget />
     </div>
 
-    <!-- Flexible spacer: pushes hero text to bottom on desktop -->
-    <div id="hero-spacer" class="hidden lg:block lg:flex-1 lg:min-h-[2rem]"></div>
-
     <!-- Hero text -->
-    <div id="hero-text-section" class="mt-6 flex max-w-5xl flex-col gap-4 lg:mt-0 lg:shrink-0 lg:gap-5">
+    <div id="hero-text-section" class="flex max-w-5xl flex-col gap-4 lg:gap-6">
       <div id="hero-marquee-split" class="hidden xl:block" style="visibility: hidden;">
         <MarqueeText text={t('index.hero.marqueetext')} />
       </div>
@@ -47,15 +50,22 @@ import { t } from '@/lib/utils';
         >
           {t('index.hero.description')}
         </p>
-        <div id="hero-btn-split" class="mt-2 w-full md:mt-4" style="visibility: hidden;">
+        <div id="hero-btn-split" class="mt-1 w-full md:mt-3" style="visibility: hidden;">
           <Button variant="primary" href="/contact">{t('index.hero.btn')}</Button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Right Side: Globe -->
-  <div class="relative order-1 h-[56vw] min-h-[280px] w-full lg:order-2 lg:h-full lg:min-h-0 lg:w-1/2" id="globe-container">
+  <!-- Right Side: Globe
+       Mobile  → normal flow, fixed aspect-ratio height
+       Desktop → absolute, fills exact height of hero-outer (= hero-left's content height)
+  -->
+  <div
+    id="globe-container"
+    class="relative order-1 h-[56vw] min-h-[280px] w-full
+           lg:absolute lg:inset-y-0 lg:right-0 lg:order-2 lg:h-auto lg:min-h-0 lg:w-1/2"
+  >
     <canvas
       id="globe-canvas-split"
       class="absolute inset-0 block size-full will-change-transform"
@@ -70,11 +80,6 @@ import { t } from '@/lib/utils';
     </div>
   </div>
 </div>
-
-<style>
-  /* Hide scrollbar on hero-left while still allowing scroll */
-  #hero-left::-webkit-scrollbar { display: none; }
-</style>
 
 <script>
   import gsap from 'gsap';
@@ -122,12 +127,11 @@ import { t } from '@/lib/utils';
   }
 
   // ── In-place chat expansion ──────────────────────────────────
-  const heroOuter      = document.getElementById('hero-outer')!;
-  const heroLeft       = document.getElementById('hero-left')!;
-  const heroText       = document.getElementById('hero-text-section')!;
-  const diagnosisEl    = document.getElementById('diagnosis-wrapper')!;
-  const heroSpacer     = document.getElementById('hero-spacer');
-  const globeEl        = document.getElementById('globe-container')!;
+  const heroOuter   = document.getElementById('hero-outer')!;
+  const heroLeft    = document.getElementById('hero-left')!;
+  const heroText    = document.getElementById('hero-text-section')!;
+  const diagnosisEl = document.getElementById('diagnosis-wrapper')!;
+  const globeEl     = document.getElementById('globe-container')!;
 
   function expandChat() {
     gsap.to(globeEl, {
@@ -136,11 +140,11 @@ import { t } from '@/lib/utils';
         globeEl.style.display   = 'none';
         gsap.set(globeEl, { clearProps: 'opacity' });
 
-        heroText.style.display      = 'none';
-        diagnosisEl.style.display   = 'none';
-        if (heroSpacer) heroSpacer.style.display = 'none';
-        heroOuter.style.height      = '100dvh';
-        heroOuter.style.overflow    = 'hidden';
+        heroText.style.display    = 'none';
+        diagnosisEl.style.display = 'none';
+        // Lock hero-outer to full viewport for chat expansion
+        heroOuter.style.height   = '100dvh';
+        heroOuter.style.overflow = 'hidden';
         Object.assign(heroLeft.style, {
           flex: '1', overflow: 'hidden',
           display: 'flex', flexDirection: 'column', width: '100%',
@@ -156,11 +160,10 @@ import { t } from '@/lib/utils';
   }
 
   function collapseChat() {
-    heroOuter.style.height      = '';
-    heroOuter.style.overflow    = '';
-    heroText.style.display      = '';
-    diagnosisEl.style.display   = '';
-    if (heroSpacer) heroSpacer.style.display = '';
+    heroOuter.style.height   = '';
+    heroOuter.style.overflow = '';
+    heroText.style.display   = '';
+    diagnosisEl.style.display = '';
     Object.assign(heroLeft.style, {
       flex: '', overflow: '', display: '', flexDirection: '', width: '',
     });
