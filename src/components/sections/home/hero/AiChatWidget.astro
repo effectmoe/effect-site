@@ -1,0 +1,173 @@
+---
+---
+<div id="ai-chat-widget" class="absolute top-10 left-4 z-20 w-[min(420px,90vw)] lg:left-14 lg:top-16">
+  <!-- Header -->
+  <div class="bg-primary flex items-center justify-between px-4 py-2.5">
+    <div class="flex items-center gap-2.5">
+      <span class="bg-accent inline-block h-1.5 w-1.5 rounded-full"></span>
+      <span class="font-mono text-xs tracking-[0.15em] text-white uppercase">EFFECT AI</span>
+    </div>
+    <span class="font-mono text-[10px] text-white/40 uppercase tracking-widest">LLMO Assistant</span>
+  </div>
+
+  <!-- Messages -->
+  <div
+    id="chat-messages"
+    class="bg-primary/90 h-52 space-y-3 overflow-y-auto p-4 backdrop-blur-sm"
+    style="scrollbar-width: thin; scrollbar-color: #333 transparent;"
+  >
+    <!-- Initial message -->
+    <div class="chat-msg assistant">
+      <p class="font-mono text-xs leading-relaxed text-white/70">
+        EFFECTのAIアシスタントです。<br>LLMO・AI戦略・Webについてご質問ください。
+      </p>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="bg-primary/95 flex items-center gap-2 border-t border-white/10 px-3 py-2.5">
+    <input
+      id="chat-input"
+      type="text"
+      placeholder="質問を入力..."
+      maxlength="200"
+      class="flex-1 bg-transparent font-mono text-xs text-white outline-none placeholder:text-white/30"
+    />
+    <button
+      id="chat-send"
+      class="group flex h-7 w-7 items-center justify-center border border-white/20 transition-colors hover:border-white/60"
+      aria-label="送信"
+    >
+      <svg class="h-3 w-3 text-white/50 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Suggested questions -->
+  <div id="chat-suggestions" class="bg-primary/80 flex flex-wrap gap-1.5 border-t border-white/5 px-3 py-2">
+    <button class="suggestion-btn font-mono text-[10px] text-white/40 hover:text-white/80 transition-colors tracking-wider uppercase">LLMOとは？</button>
+    <button class="suggestion-btn font-mono text-[10px] text-white/40 hover:text-white/80 transition-colors tracking-wider uppercase">EFFECTのサービス</button>
+    <button class="suggestion-btn font-mono text-[10px] text-white/40 hover:text-white/80 transition-colors tracking-wider uppercase">AI戦略の始め方</button>
+  </div>
+</div>
+
+<style>
+  .chat-msg.user p {
+    color: rgba(255,255,255,0.9);
+    text-align: right;
+  }
+  .chat-msg.assistant p {
+    color: rgba(255,255,255,0.65);
+  }
+  .chat-msg.user {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .chat-msg.user p {
+    background: rgba(255,255,255,0.08);
+    padding: 0.375rem 0.625rem;
+    max-width: 85%;
+  }
+  .typing-cursor::after {
+    content: '▋';
+    animation: blink 0.8s step-end infinite;
+    color: rgba(255,255,255,0.4);
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+</style>
+
+<script>
+  const messagesEl = document.getElementById('chat-messages')!;
+  const inputEl = document.getElementById('chat-input') as HTMLInputElement;
+  const sendBtn = document.getElementById('chat-send')!;
+  const suggestionsEl = document.getElementById('chat-suggestions')!;
+
+  const history: { role: 'user' | 'assistant'; content: string }[] = [];
+
+  function addMessage(role: 'user' | 'assistant', text: string) {
+    const div = document.createElement('div');
+    div.className = `chat-msg ${role}`;
+    const p = document.createElement('p');
+    p.className = 'font-mono text-xs leading-relaxed';
+    p.textContent = text;
+    div.appendChild(p);
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return p;
+  }
+
+  async function sendMessage(text: string) {
+    if (!text.trim()) return;
+
+    // Hide suggestions after first message
+    suggestionsEl.style.display = 'none';
+
+    addMessage('user', text);
+    history.push({ role: 'user', content: text });
+    inputEl.value = '';
+    inputEl.disabled = true;
+    sendBtn.setAttribute('disabled', 'true');
+
+    // Streaming assistant response
+    const p = addMessage('assistant', '');
+    p.classList.add('typing-cursor');
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history: history.slice(-6) }),
+      });
+
+      if (!res.ok) throw new Error('API error');
+      if (!res.body) throw new Error('No stream');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let full = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        // Parse SSE: "data: {...}\n\n"
+        for (const line of chunk.split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (raw === '[DONE]') break;
+          try {
+            const json = JSON.parse(raw);
+            const delta = json.response ?? json.choices?.[0]?.delta?.content ?? '';
+            full += delta;
+            p.textContent = full;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          } catch {}
+        }
+      }
+
+      p.classList.remove('typing-cursor');
+      history.push({ role: 'assistant', content: full });
+    } catch (e) {
+      p.classList.remove('typing-cursor');
+      p.textContent = '申し訳ありません。接続エラーが発生しました。';
+    } finally {
+      inputEl.disabled = false;
+      sendBtn.removeAttribute('disabled');
+      inputEl.focus();
+    }
+  }
+
+  sendBtn.addEventListener('click', () => sendMessage(inputEl.value));
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(inputEl.value);
+    }
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.suggestion-btn').forEach((btn) => {
+    btn.addEventListener('click', () => sendMessage(btn.textContent ?? ''));
+  });
+</script>

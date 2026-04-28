@@ -1,6 +1,7 @@
 ---
 import MarqueeText from '@/components/common/MarqueeText.astro';
 import Button from '@/components/ui/Button.astro';
+import AiChatWidget from './AiChatWidget.astro';
 import { t } from '@/lib/utils';
 ---
 
@@ -9,6 +10,10 @@ import { t } from '@/lib/utils';
   <div
     class="bg-background relative z-10 order-2 flex h-[25%] w-full flex-col justify-end px-4 pb-4 lg:order-1 lg:h-full lg:w-1/2 lg:justify-end lg:px-14 lg:pb-14"
   >
+    <!-- AI Chat Widget (desktop only, upper-left space) -->
+    <div class="hidden lg:block">
+      <AiChatWidget />
+    </div>
     <div class="flex max-w-5xl flex-col gap-4 lg:gap-6">
       <div id="hero-marquee-split" class="hidden xl:block" style="visibility: hidden;">
         <MarqueeText text={t('index.hero.marqueetext')} />
