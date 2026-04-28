@@ -7,9 +7,11 @@ import Button from '@/components/ui/Button.astro';
 
 interface Props {
   blogs: CollectionEntry<'blogs'>[];
+  count?: number;
 }
 
-const { blogs } = Astro.props;
+const { blogs, count = 2 } = Astro.props;
+const displayedBlogs = blogs.slice(0, count);
 ---
 
 <section data-blogs-index="section" class="container mx-auto space-y-6 px-4 py-20 md:space-y-12 lg:py-28">
@@ -30,7 +32,7 @@ const { blogs } = Astro.props;
     </div>
   </div>
   <div data-blogs-index="card" class="grid grid-cols-1 gap-6 md:grid-cols-2">
-    {blogs.map((blog) => <BlogCard blog={blog} />)}
+    {displayedBlogs.map((blog) => <BlogCard blog={blog} />)}
   </div>
 </section>
 

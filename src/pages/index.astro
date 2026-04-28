@@ -13,16 +13,18 @@ import { t } from '@/lib/utils';
 const projects = await getCollection('projects');
 const projectFilter = projects.filter((project) => project.data.featured).slice(0, 3);
 
+const BLOG_COUNT = 2; // ← この数字を変えるとホームの表示件数が変わる
+
 const blogs = await getCollection('blogs');
-const blogFilter = blogs.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime()).slice(0, 2);
+const blogFilter = blogs.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
 ---
 
 <Layout title={t('meta.index.title')} description={t('meta.index.description')} keywords={t('meta.index.keywords')}>
   <GlobeHeroSplit />
+  <BlogsHome blogs={blogFilter} count={BLOG_COUNT} />
   <AboutHome />
   <Services />
   <Process />
   <WorksHome projects={projectFilter} />
   <Testimonials />
-  <BlogsHome blogs={blogFilter} />
 </Layout>
