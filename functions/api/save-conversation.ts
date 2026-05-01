@@ -1,6 +1,7 @@
 interface Env {
   brain_knowledge: D1Database;
   GAS_GMAIL_URL?: string;
+  COMMANDC_PWA_URL?: string;  // commandc-pwa へのコンテンツシグナル通知先
 }
 
 interface Message {
@@ -54,6 +55,22 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         }),
       }).catch(() => null);
     }
+
+    // commandc-pwa にコンテンツシグナルを非同期送信（fire-and-forget）
+    const pwaUrl = env.COMMANDC_PWA_URL || 'https://pwa.effect.moe';
+    context.waitUntil(
+      fetch(`${pwaUrl}/api/content-signal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: 'chatbot',
+          conversation_id: id,
+          messages,
+          email: email ?? null,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => null)
+    );
 
     return new Response(JSON.stringify({ ok: true, id }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
