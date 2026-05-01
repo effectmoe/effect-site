@@ -29,7 +29,8 @@ const AI_CRAWLERS = [
   { name: "DotBot",           pattern: "DotBot" },
 ];
 
-export async function onRequest({ request, env, next }) {
+export async function onRequest(context) {
+  const { request, env, next, waitUntil } = context;
   const response = await next();
 
   const ua  = request.headers.get("User-Agent") || "";
@@ -51,14 +52,15 @@ export async function onRequest({ request, env, next }) {
       statusCode: response.status,
     };
 
-    // 日付別・クローラー別に R2 へ非同期書き込み
     const date = entry.timestamp.slice(0, 10);
     const key  = `logs/${date}/${crawler.name}/${Date.now()}_${Math.random().toString(36).slice(2)}.json`;
 
-    // レスポンスをブロックしない（waitUntil 相当の fire-and-forget）
-    env.CRAWLER_LOGS.put(key, JSON.stringify(entry), {
-      httpMetadata: { contentType: "application/json" },
-    }).catch(() => {});
+    // waitUntil でレスポンス返却後もR2書き込みを完了させる
+    waitUntil(
+      env.CRAWLER_LOGS.put(key, JSON.stringify(entry), {
+        httpMetadata: { contentType: "application/json" },
+      })
+    );
   }
 
   return response;
