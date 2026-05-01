@@ -2,7 +2,8 @@
  * POST /api/contact
  * Resend API 経由でメール送信（Astro Actions の代替）
  */
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost(context) {
+  const { request, env, waitUntil } = context;
   const cors = { "Content-Type": "application/json" };
 
   try {
@@ -39,6 +40,22 @@ export async function onRequestPost({ request, env }) {
     });
 
     if (!res.ok) throw new Error(`Resend error: ${res.status}`);
+
+    // commandc-pwa にコンテンツシグナル送信（fire-and-forget）
+    const pwaUrl = env.COMMANDC_PWA_URL || 'https://pwa.effect.moe';
+    waitUntil(
+      fetch(`${pwaUrl}/api/content-signal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: 'contact-form',
+          name,
+          email,
+          message,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => null)
+    );
 
     return Response.json({ success: true }, { headers: cors });
 

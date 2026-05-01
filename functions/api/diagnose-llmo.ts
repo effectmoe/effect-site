@@ -441,6 +441,32 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       }).catch(() => null);
     }
 
+    // ── commandc-pwa にコンテンツシグナル送信（fire-and-forget） ──
+    // 診断スコアが低い（弱点が多い）→ そのジャンルの記事ニーズあり、と判定材料に
+    const weaknesses: string[] = [];
+    if (result.checks.llmsTxt.score        === 0) weaknesses.push('llms.txt 未対応');
+    if (result.checks.robotsTxt.score      === 0) weaknesses.push('AIクローラーブロック');
+    if (result.checks.sitemapXml.score     === 0) weaknesses.push('sitemap.xml 不在');
+    if (result.checks.metaTags.score       <  10) weaknesses.push('メタタグ不足');
+    if (result.checks.structuredData.score === 0) weaknesses.push('構造化データなし');
+    if (result.checks.topicCluster.score   <  10) weaknesses.push('トピック構造が弱い');
+
+    const pwaUrl = (context.env as any).COMMANDC_PWA_URL || 'https://pwa.effect.moe';
+    context.waitUntil(
+      fetch(`${pwaUrl}/api/content-signal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source: 'llmo-diag',
+          url: target.toString(),
+          score,
+          weaknesses,
+          email: email ?? null,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => null)
+    );
+
     return okRes(result);
   } catch (e: any) {
     return errRes(e.message ?? '診断に失敗しました');
