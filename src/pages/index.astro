@@ -10,7 +10,7 @@ import Testimonials from '@/components/sections/home/Testimonials.astro';
 import KnowledgeHome from '@/components/sections/home/blogs-home/KnowledgeHome.astro';
 import { t } from '@/lib/utils';
 
-const KNOWLEDGE_COUNT = 6; // ← この数字を変えるとホームの表示件数が変わる
+const KNOWLEDGE_COUNT = 4; // ← この数字を変えるとホームの表示件数が変わる
 
 const projects = await getCollection('projects');
 const projectFilter = projects.filter((project) => project.data.featured).slice(0, 3);
