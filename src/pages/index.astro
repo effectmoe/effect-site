@@ -28,7 +28,11 @@ const allEntries = [
     title: e.data.title, description: e.data.description, date: e.data.date,
     category: e.data.category, tags: e.data.tags ?? [], heroImage: e.data.heroImage,
   })),
-].sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0));
+].sort((a, b) => {
+  const ta = a.date instanceof Date ? a.date.getTime() : new Date(String(a.date ?? 0)).getTime();
+  const tb = b.date instanceof Date ? b.date.getTime() : new Date(String(b.date ?? 0)).getTime();
+  return tb - ta;
+});
 ---
 
 <Layout title={t('meta.index.title')} description={t('meta.index.description')} keywords={t('meta.index.keywords')}>

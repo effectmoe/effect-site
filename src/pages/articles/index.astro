@@ -4,16 +4,22 @@ import Layout from '@/layouts/Layout.astro';
 import ArticleListContent from '@/components/sections/article/ArticleListContent.astro';
 
 const raw = await getCollection('articles', ({ data }) => !data.draft);
-const entries = raw.map((e) => ({
-  id: e.id,
-  href: `/articles/${e.id}`,
-  title: e.data.title,
-  description: e.data.description,
-  date: e.data.date,
-  category: e.data.category,
-  tags: e.data.tags,
-  heroImage: e.data.heroImage,
-}));
+const entries = raw
+  .map((e) => ({
+    id: e.id,
+    href: `/articles/${e.id}`,
+    title: e.data.title,
+    description: e.data.description,
+    date: e.data.date,
+    category: e.data.category,
+    tags: e.data.tags,
+    heroImage: e.data.heroImage,
+  }))
+  .sort((a, b) => {
+    const ta = a.date instanceof Date ? a.date.getTime() : new Date(a.date ?? 0).getTime();
+    const tb = b.date instanceof Date ? b.date.getTime() : new Date(b.date ?? 0).getTime();
+    return tb - ta; // 新しい順
+  });
 ---
 
 <Layout title="記事 — EFFECT" description="AIとデジタル戦略に関する記事">
