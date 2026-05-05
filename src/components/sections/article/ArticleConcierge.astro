@@ -220,6 +220,28 @@ const suggestions = [
     color: #fff;
   }
 
+  /* 考え中ドット */
+  .ai-thinking {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 0;
+  }
+  .ai-thinking span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 50%;
+    animation: thinking-bounce 1.3s infinite ease-in-out;
+  }
+  .ai-thinking span:nth-child(2) { animation-delay: 0.18s; }
+  .ai-thinking span:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes thinking-bounce {
+    0%, 70%, 100% { transform: translateY(0) scale(0.75); opacity: 0.35; }
+    35%           { transform: translateY(-6px) scale(1);  opacity: 1; }
+  }
+
   .typing::after {
     content: '▋';
     animation: blink 0.8s step-end infinite;
@@ -245,6 +267,23 @@ const suggestions = [
   const history = [];
   let chatStarted = false;
   let firstResponseReceived = false;
+  let thinkingEl = null;
+
+  function showThinking() {
+    thinkingEl = document.createElement('div');
+    thinkingEl.className = 'concierge-msg';
+    thinkingEl.dataset.role = 'assistant';
+    const dots = document.createElement('div');
+    dots.className = 'msg-bubble ai-thinking';
+    dots.innerHTML = '<span></span><span></span><span></span>';
+    thinkingEl.appendChild(dots);
+    messagesEl.appendChild(thinkingEl);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+  function hideThinking() {
+    thinkingEl?.remove();
+    thinkingEl = null;
+  }
 
   const articleContext = { id: articleId, title: articleTitle, body: truncatedBody };
 

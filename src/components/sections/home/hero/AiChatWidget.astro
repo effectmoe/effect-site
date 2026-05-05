@@ -135,6 +135,28 @@
     color: #fff;
   }
 
+  /* 考え中ドット */
+  .ai-thinking {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 0;
+  }
+  .ai-thinking span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: rgba(0,0,0,0.28);
+    border-radius: 50%;
+    animation: thinking-bounce 1.3s infinite ease-in-out;
+  }
+  .ai-thinking span:nth-child(2) { animation-delay: 0.18s; }
+  .ai-thinking span:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes thinking-bounce {
+    0%, 70%, 100% { transform: translateY(0) scale(0.75); opacity: 0.35; }
+    35%           { transform: translateY(-6px) scale(1);  opacity: 1; }
+  }
+
   .typing::after {
     content: '▋';
     animation: blink 0.8s step-end infinite;
@@ -165,6 +187,23 @@
   const history: { role: 'user'|'assistant'; content: string }[] = [];
   let chatStarted = false;
   let firstResponseReceived = false;
+  let thinkingEl: HTMLElement | null = null;
+
+  function showThinking() {
+    thinkingEl = document.createElement('div');
+    thinkingEl.className = 'ai-msg';
+    thinkingEl.dataset.role = 'assistant';
+    const dots = document.createElement('div');
+    dots.className = 'ai-thinking';
+    dots.innerHTML = '<span></span><span></span><span></span>';
+    thinkingEl.appendChild(dots);
+    messagesEl.appendChild(thinkingEl);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+  function hideThinking() {
+    thinkingEl?.remove();
+    thinkingEl = null;
+  }
 
   // ── Typewriter placeholder ────────────────────────────────
   const questions = [
@@ -276,9 +315,10 @@
     history.push({ role: 'user', content: text });
     inputEl.value = '';
     setLoading(true);
+    showThinking();
 
-    const p = addMsg('assistant');
-    p.classList.add('typing');
+    let p: HTMLElement | null = null;
+    let full = '';
 
     try {
       const res = await fetch('/api/chat', {
@@ -290,7 +330,6 @@
 
       const reader = res.body.getReader();
       const dec = new TextDecoder();
-      let full = '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -302,15 +341,23 @@
           try {
             const d = JSON.parse(raw);
             const token = d.response ?? d.choices?.[0]?.delta?.content ?? '';
+            if (!token) continue;
+            if (!p) {
+              hideThinking();
+              p = addMsg('assistant');
+              p.classList.add('typing');
+            }
             full += token;
             p.textContent = full;
             messagesEl.scrollTop = messagesEl.scrollHeight;
           } catch {}
         }
       }
-      // 受信完了後にMarkdownとしてレンダリング
-      p.classList.remove('typing');
-      p.innerHTML = parseMarkdown(full);
+
+      if (p) {
+        p.classList.remove('typing');
+        p.innerHTML = parseMarkdown(full);
+      }
       history.push({ role: 'assistant', content: full });
 
       if (!firstResponseReceived && full) {
@@ -318,9 +365,11 @@
         emailTrigger.classList.remove('hidden');
       }
     } catch {
+      hideThinking();
+      if (!p) p = addMsg('assistant');
       p.textContent = '接続エラー。しばらくしてから再試行してください。';
     } finally {
-      p.classList.remove('typing');
+      hideThinking();
       setLoading(false);
       inputEl.focus();
     }
