@@ -100,161 +100,87 @@ const suggestions = [
 
 <style>
   #concierge-messages::-webkit-scrollbar { display: none; }
+</style>
 
+<!-- 動的生成要素はスコープが当たらないため is:global で定義 -->
+<style is:global>
   /* ── ユーザーメッセージ ─────────────────────────────────── */
-  .concierge-msg[data-role="user"] { display: flex; flex-direction: column; align-items: flex-end; }
+  .concierge-msg[data-role="user"] { display:flex; flex-direction:column; align-items:flex-end; }
   .concierge-msg[data-role="user"] .msg-bubble {
-    background: #0a0a0a;
-    color: #fff;
-    padding: 0.6rem 1rem;
-    font-family: var(--font-roboto-mono), monospace;
-    font-size: 0.75rem;
-    line-height: 1.7;
-    max-width: 85%;
+    background:#0a0a0a; color:#fff; padding:.6rem 1rem;
+    font-family:var(--font-roboto-mono),monospace; font-size:.75rem; line-height:1.7; max-width:85%;
   }
 
-  /* ── AIメッセージ共通 ───────────────────────────────────── */
-  .concierge-msg[data-role="assistant"] .msg-bubble {
-    font-size: 0.8125rem;
-    line-height: 1.8;
-    color: rgba(0,0,0,0.78);
-  }
+  /* ── AI メッセージ共通 ──────────────────────────────────── */
+  .concierge-msg[data-role="assistant"] .msg-bubble { font-size:.8125rem; line-height:1.8; color:rgba(0,0,0,.78); }
+  .concierge-msg[data-role="assistant"] .msg-bubble p { margin:.55em 0; }
+  .concierge-msg[data-role="assistant"] .msg-bubble p:first-child { margin-top:0; }
+  .concierge-msg[data-role="assistant"] .msg-bubble p:last-child  { margin-bottom:0; }
+  .concierge-msg[data-role="assistant"] .msg-bubble strong { font-weight:700; color:#0a0a0a; }
+  .concierge-msg[data-role="assistant"] .msg-bubble em { font-style:italic; }
 
-  /* 段落 */
-  .concierge-msg[data-role="assistant"] .msg-bubble p {
-    margin: 0.55em 0;
-  }
-  .concierge-msg[data-role="assistant"] .msg-bubble p:first-child { margin-top: 0; }
-  .concierge-msg[data-role="assistant"] .msg-bubble p:last-child  { margin-bottom: 0; }
-
-  /* 見出し — アクセントボーダー付き */
+  /* 見出し */
   .concierge-msg[data-role="assistant"] .msg-bubble h2,
   .concierge-msg[data-role="assistant"] .msg-bubble h3,
   .concierge-msg[data-role="assistant"] .msg-bubble h4 {
-    font-family: var(--font-roboto-mono), monospace;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #0a0a0a;
-    border-left: 3px solid #c2410c;
-    padding-left: 0.6em;
-    margin: 1em 0 0.35em;
-    line-height: 1.4;
+    font-family:var(--font-roboto-mono),monospace; font-size:.68rem; font-weight:700;
+    letter-spacing:.14em; text-transform:uppercase; color:#0a0a0a;
+    border-left:3px solid #c2410c; padding-left:.6em; margin:1em 0 .35em; line-height:1.4;
   }
 
-  /* 太字・斜体 */
-  .concierge-msg[data-role="assistant"] .msg-bubble strong {
-    font-weight: 700;
-    color: #0a0a0a;
-  }
-  .concierge-msg[data-role="assistant"] .msg-bubble em { font-style: italic; }
-
-  /* リスト — カスタムダッシュ */
+  /* リスト */
   .concierge-msg[data-role="assistant"] .msg-bubble ul,
-  .concierge-msg[data-role="assistant"] .msg-bubble ol {
-    list-style: none;
-    padding-left: 0;
-    margin: 0.5em 0;
-  }
+  .concierge-msg[data-role="assistant"] .msg-bubble ol { list-style:none; padding-left:0; margin:.5em 0; }
   .concierge-msg[data-role="assistant"] .msg-bubble li {
-    position: relative;
-    padding-left: 1.1em;
-    margin: 0.3em 0;
-    color: rgba(0,0,0,0.75);
-    font-size: 0.8rem;
-    line-height: 1.75;
+    position:relative; padding-left:1.1em; margin:.3em 0; color:rgba(0,0,0,.75); font-size:.8rem; line-height:1.75;
   }
   .concierge-msg[data-role="assistant"] .msg-bubble li::before {
-    content: '—';
-    position: absolute;
-    left: 0;
-    color: #c2410c;
-    font-weight: 700;
+    content:'—'; position:absolute; left:0; color:#c2410c; font-weight:700;
   }
 
   /* ステップカード */
   .concierge-msg[data-role="assistant"] .msg-bubble .md-step { display:flex; gap:.65rem; margin:.5rem 0; padding:.6rem .8rem; background:rgba(0,0,0,.025); border-left:2px solid #c2410c; }
-  .concierge-msg[data-role="assistant"] .msg-bubble .md-sn   { font-family:var(--font-roboto-mono),monospace; font-size:.7rem; font-weight:700; color:#c2410c; min-width:1.2em; flex-shrink:0; padding-top:1px; }
-  .concierge-msg[data-role="assistant"] .msg-bubble .md-sb   { flex:1; min-width:0; }
-  .concierge-msg[data-role="assistant"] .msg-bubble .md-st   { font-size:.8rem; font-weight:700; color:#0a0a0a; line-height:1.45; }
-  .concierge-msg[data-role="assistant"] .msg-bubble .md-ss   { font-size:.75rem; color:rgba(0,0,0,.55); line-height:1.7; padding-left:.55rem; border-left:1px solid rgba(0,0,0,.12); margin-top:3px; }
+  .concierge-msg[data-role="assistant"] .msg-bubble .md-sn { font-family:var(--font-roboto-mono),monospace; font-size:.7rem; font-weight:700; color:#c2410c; min-width:1.2em; flex-shrink:0; padding-top:1px; }
+  .concierge-msg[data-role="assistant"] .msg-bubble .md-sb { flex:1; min-width:0; }
+  .concierge-msg[data-role="assistant"] .msg-bubble .md-st { font-size:.8rem; font-weight:700; color:#0a0a0a; line-height:1.45; }
+  .concierge-msg[data-role="assistant"] .msg-bubble .md-ss { font-size:.75rem; color:rgba(0,0,0,.55); line-height:1.7; padding-left:.55rem; border-left:1px solid rgba(0,0,0,.12); margin-top:3px; }
 
-  /* インラインコード */
+  /* コード */
   .concierge-msg[data-role="assistant"] .msg-bubble code {
-    font-family: var(--font-roboto-mono), monospace;
-    font-size: 0.82em;
-    color: #c2410c;
-    background: rgba(194,65,12,0.08);
-    border: 1px solid rgba(194,65,12,0.2);
-    padding: 0.1em 0.4em;
+    font-family:var(--font-roboto-mono),monospace; font-size:.82em; color:#c2410c;
+    background:rgba(194,65,12,.08); border:1px solid rgba(194,65,12,.2); padding:.1em .4em;
   }
-
-  /* コードブロック — ダークテーマ */
   .concierge-msg[data-role="assistant"] .msg-bubble pre {
-    background: #0a0a0a;
-    border-left: 3px solid #c2410c;
-    padding: 0.85em 1.1em;
-    margin: 0.7em 0;
-    overflow-x: auto;
+    background:#0a0a0a; border-left:3px solid #c2410c; padding:.85em 1.1em; margin:.7em 0; overflow-x:auto;
   }
-  .concierge-msg[data-role="assistant"] .msg-bubble pre code {
-    color: #e5e5e5;
-    background: none;
-    border: none;
-    font-size: 0.78rem;
-    padding: 0;
-  }
+  .concierge-msg[data-role="assistant"] .msg-bubble pre code { color:#e5e5e5; background:none; border:none; font-size:.78rem; padding:0; }
 
-  /* リンク — ボタン形式 */
+  /* リンク */
   .concierge-msg[data-role="assistant"] .msg-bubble a {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25em;
-    color: #c2410c;
-    border: 1px solid #c2410c;
-    padding: 0.15em 0.65em;
-    font-family: var(--font-roboto-mono), monospace;
-    font-size: 0.78em;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s;
+    display:inline-flex; align-items:center; gap:.25em; color:#c2410c;
+    border:1px solid #c2410c; padding:.15em .65em;
+    font-family:var(--font-roboto-mono),monospace; font-size:.78em; font-weight:700;
+    letter-spacing:.06em; text-decoration:none; transition:background .15s,color .15s;
   }
-  .concierge-msg[data-role="assistant"] .msg-bubble a::after { content: ' →'; }
-  .concierge-msg[data-role="assistant"] .msg-bubble a:hover {
-    background: #c2410c;
-    color: #fff;
-  }
+  .concierge-msg[data-role="assistant"] .msg-bubble a::after { content:' →'; }
+  .concierge-msg[data-role="assistant"] .msg-bubble a:hover { background:#c2410c; color:#fff; }
 
   /* 考え中ドット */
-  .ai-thinking {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 0;
+  .concierge-thinking { display:flex; align-items:center; gap:5px; padding:6px 0; }
+  .concierge-thinking span {
+    display:inline-block; width:6px; height:6px; background:rgba(0,0,0,.25);
+    border-radius:50%; animation:c-thinking-bounce 1.3s infinite ease-in-out;
   }
-  .ai-thinking span {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background: rgba(0,0,0,0.25);
-    border-radius: 50%;
-    animation: thinking-bounce 1.3s infinite ease-in-out;
-  }
-  .ai-thinking span:nth-child(2) { animation-delay: 0.18s; }
-  .ai-thinking span:nth-child(3) { animation-delay: 0.36s; }
-  @keyframes thinking-bounce {
-    0%, 70%, 100% { transform: translateY(0) scale(0.75); opacity: 0.35; }
-    35%           { transform: translateY(-6px) scale(1);  opacity: 1; }
+  .concierge-thinking span:nth-child(2) { animation-delay:.18s; }
+  .concierge-thinking span:nth-child(3) { animation-delay:.36s; }
+  @keyframes c-thinking-bounce {
+    0%,70%,100% { transform:translateY(0) scale(.75); opacity:.35; }
+    35%         { transform:translateY(-6px) scale(1); opacity:1; }
   }
 
-  .typing::after {
-    content: '▋';
-    animation: blink 0.8s step-end infinite;
-    opacity: 0.4;
-  }
-  @keyframes blink { 0%,100%{opacity:0.4} 50%{opacity:0} }
+  /* タイピングカーソル */
+  .concierge-typing::after { content:'▋'; animation:c-blink .8s step-end infinite; opacity:.4; }
+  @keyframes c-blink { 0%,100%{opacity:.4} 50%{opacity:0} }
 </style>
 
 <script define:vars={{ articleId, articleTitle, truncatedBody }}>
@@ -281,7 +207,7 @@ const suggestions = [
     thinkingEl.className = 'concierge-msg';
     thinkingEl.dataset.role = 'assistant';
     const dots = document.createElement('div');
-    dots.className = 'msg-bubble ai-thinking';
+    dots.className = 'msg-bubble concierge-thinking';
     dots.innerHTML = '<span></span><span></span><span></span>';
     thinkingEl.appendChild(dots);
     messagesEl.appendChild(thinkingEl);
@@ -429,7 +355,7 @@ const suggestions = [
             if (!bubble) {
               hideThinking();
               bubble = addMsg('assistant');
-              bubble.classList.add('typing');
+              bubble.classList.add('concierge-typing');
             }
             full += token;
             bubble.textContent = full;
