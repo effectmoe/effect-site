@@ -30,9 +30,9 @@ const articleBody = entry.body ?? (description ?? '');
       <Icon name="chevron" class="h-4 w-4" />記事一覧へ
     </Button>
     <ArticleSlugHeader {title} {description} {date} {category} {tags} {heroImage} />
+    <ArticleConcierge articleId={entry.id} articleTitle={title} articleBody={articleBody} />
     <BlogSlugContent {headings}>
       <Content />
     </BlogSlugContent>
   </article>
-  <ArticleConcierge articleId={entry.id} articleTitle={title} articleBody={articleBody} />
 </Layout>
