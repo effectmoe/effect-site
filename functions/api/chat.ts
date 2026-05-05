@@ -73,7 +73,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const aiResponse = await (env.AI.run as any)('@cf/meta/llama-3.1-8b-instruct', {
       messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
       stream: true,
-      max_tokens: 512,
+      max_tokens: 1024,
     });
 
     return new Response(aiResponse as ReadableStream, {

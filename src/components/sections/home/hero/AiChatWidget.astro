@@ -77,7 +77,32 @@
 
   .ai-msg[data-role="user"] p { color: rgba(0,0,0,0.82); text-align: right; }
   .ai-msg[data-role="user"] { display: flex; justify-content: flex-end; }
-  .ai-msg[data-role="assistant"] p { color: rgba(0,0,0,0.68); }
+  .ai-msg[data-role="assistant"] p { color: rgba(0,0,0,0.68); font-size: 0.75rem; line-height: 1.8; }
+
+  /* リッチテキスト — assistant メッセージ内 */
+  .ai-msg[data-role="assistant"] p + p { margin-top: 0.5em; }
+  .ai-msg[data-role="assistant"] strong { font-weight: 700; color: rgba(0,0,0,0.85); }
+  .ai-msg[data-role="assistant"] em     { font-style: italic; }
+  .ai-msg[data-role="assistant"] h2,
+  .ai-msg[data-role="assistant"] h3,
+  .ai-msg[data-role="assistant"] h4 {
+    font-weight: 700; color: rgba(0,0,0,0.85);
+    margin: 0.6em 0 0.2em; line-height: 1.4; font-size: 0.8rem;
+  }
+  .ai-msg[data-role="assistant"] ul {
+    padding-left: 1.1em; margin: 0.3em 0; list-style: disc;
+  }
+  .ai-msg[data-role="assistant"] li  { margin: 0.15em 0; font-size: 0.75rem; line-height: 1.8; color: rgba(0,0,0,0.68); }
+  .ai-msg[data-role="assistant"] code {
+    font-family: var(--font-roboto-mono), monospace;
+    font-size: 0.8em; background: rgba(0,0,0,0.07);
+    padding: 0.1em 0.3em; border-radius: 2px;
+  }
+  .ai-msg[data-role="assistant"] pre {
+    background: rgba(0,0,0,0.05); padding: 0.6em 0.8em;
+    overflow-x: auto; margin: 0.4em 0; border-radius: 2px;
+  }
+  .ai-msg[data-role="assistant"] pre code { background: none; padding: 0; font-size: 0.75rem; }
 
   .typing::after {
     content: '▋';
@@ -152,6 +177,34 @@
   });
   // ─────────────────────────────────────────────────────────
 
+  // ── Markdown → HTML（XSSセーフ）────────────────────────────
+  function esc(s: string) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function parseMarkdown(raw: string) {
+    let s = esc(raw);
+    s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => `<pre><code>${c.trimEnd()}</code></pre>`);
+    s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    s = s.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+    s = s.replace(/^## (.+)$/gm,  '<h3>$1</h3>');
+    s = s.replace(/^# (.+)$/gm,   '<h2>$1</h2>');
+    s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    s = s.replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>');
+    s = s.replace(/\*(.+?)\*/g,         '<em>$1</em>');
+    s = s.replace(/^[-*] (.+)$/gm,  '<li>$1</li>');
+    s = s.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    s = s.replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+    const blocks = s.split(/\n{2,}/);
+    s = blocks.map(b => {
+      b = b.trim();
+      if (!b) return '';
+      if (/^<(h[234]|ul|ol|pre|li)/.test(b)) return b;
+      return `<p>${b.replace(/\n/g, '<br>')}</p>`;
+    }).join('');
+    return s;
+  }
+  // ──────────────────────────────────────────────────────────
+
   function addMsg(role: 'user'|'assistant', text = '') {
     const div = document.createElement('div');
     div.className = 'ai-msg'; div.dataset.role = role;
@@ -222,9 +275,11 @@
           } catch {}
         }
       }
+      // 受信完了後にMarkdownとしてレンダリング
+      p.classList.remove('typing');
+      p.innerHTML = parseMarkdown(full);
       history.push({ role: 'assistant', content: full });
 
-      // Show email trigger button after first response (no border, no auto-expand)
       if (!firstResponseReceived && full) {
         firstResponseReceived = true;
         emailTrigger.classList.remove('hidden');
