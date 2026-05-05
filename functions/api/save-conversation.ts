@@ -2,44 +2,79 @@
 function esc(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
 function mdToEmailHtml(raw: string): string {
-  let s = esc(raw);
-  // コードブロック
-  s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, c) =>
-    `<pre style="background:#0a0a0a;color:#e5e5e5;padding:12px 16px;margin:10px 0;font-size:13px;line-height:1.6;overflow-x:auto;border-left:3px solid #c2410c;">${c.trimEnd()}</pre>`
+  // コードブロックを保護（先に退避）
+  const codeBlocks: string[] = [];
+  let s = raw.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, c) => {
+    codeBlocks.push(c.trimEnd());
+    return `\x00CODE${codeBlocks.length - 1}\x00`;
+  });
+
+  s = esc(s);
+
+  // コードブロック復元
+  s = s.replace(/\x00CODE(\d+)\x00/g, (_, i) =>
+    `<pre style="background:#0a0a0a;color:#e5e5e5;padding:12px 16px;margin:12px 0;font-size:12px;line-height:1.6;border-left:3px solid #c2410c;font-family:monospace;">${esc(codeBlocks[+i])}</pre>`
   );
+
   // インラインコード
-  s = s.replace(/`([^`\n]+)`/g,
-    '<code style="font-family:monospace;font-size:13px;color:#c2410c;background:rgba(194,65,12,0.08);border:1px solid rgba(194,65,12,0.2);padding:1px 5px;">$1</code>'
+  s = s.replace(/`([^`\n]+)`/g, (_, c) =>
+    `<code style="font-family:monospace;font-size:12px;color:#c2410c;background:rgba(194,65,12,.08);border:1px solid rgba(194,65,12,.2);padding:1px 5px;">${c}</code>`
   );
-  // 見出し
-  const headingStyle = 'font-family:monospace;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#0a0a0a;border-left:3px solid #c2410c;padding-left:8px;margin:16px 0 6px;';
-  s = s.replace(/^### (.+)$/gm, `<div style="${headingStyle}">$1</div>`);
-  s = s.replace(/^## (.+)$/gm,  `<div style="${headingStyle}">$1</div>`);
-  s = s.replace(/^# (.+)$/gm,   `<div style="${headingStyle}">$1</div>`);
+
+  // 見出し（4つ以上の # から順に処理）
+  const hStyle = 'display:block;font-family:monospace;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#0a0a0a;border-left:3px solid #c2410c;padding-left:8px;margin:16px 0 6px;line-height:1.4;';
+  s = s.replace(/^#{4,} (.+)$/gm, (_, t) => `<div style="${hStyle}">${t}</div>`);
+  s = s.replace(/^### (.+)$/gm,   (_, t) => `<div style="${hStyle}">${t}</div>`);
+  s = s.replace(/^## (.+)$/gm,    (_, t) => `<div style="${hStyle}font-size:13px;">${t}</div>`);
+  s = s.replace(/^# (.+)$/gm,     (_, t) => `<div style="${hStyle}font-size:15px;">${t}</div>`);
+
+  // マークダウンテーブル
+  s = s.replace(
+    /((?:\|.+\|\n?)+)/g,
+    (block) => {
+      const rows = block.trim().split('\n').filter(r => r.trim());
+      if (rows.length < 2) return block;
+      const isSep = (r: string) => /^\|[-| :]+\|$/.test(r.trim());
+      const sepIdx = rows.findIndex(isSep);
+      if (sepIdx < 0) return block;
+
+      const toTd = (row: string, tag: string) =>
+        row.split('|').filter((_, i, a) => i > 0 && i < a.length - 1)
+          .map(c => `<${tag} style="padding:6px 10px;border:1px solid #e5e5e5;font-size:13px;color:#333;text-align:left;">${c.trim()}</${tag}>`).join('');
+
+      const headerRows = rows.slice(0, sepIdx).map(r => `<tr>${toTd(r,'th')}</tr>`).join('');
+      const bodyRows   = rows.slice(sepIdx + 1).map(r => `<tr>${toTd(r,'td')}</tr>`).join('');
+      return `<table style="border-collapse:collapse;width:100%;margin:10px 0;font-size:13px;"><thead style="background:#f5f5f5;">${headerRows}</thead><tbody>${bodyRows}</tbody></table>`;
+    }
+  );
+
   // 太字・斜体
-  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  s = s.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#0a0a0a;">$1</strong>');
-  s = s.replace(/\*(.+?)\*/g,     '<em>$1</em>');
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, (_, t) => `<strong><em>${t}</em></strong>`);
+  s = s.replace(/\*\*(.+?)\*\*/g,     (_, t) => `<strong style="color:#0a0a0a;">${t}</strong>`);
+  s = s.replace(/\*(.+?)\*/g,         (_, t) => `<em>${t}</em>`);
+
   // リンク
-  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" style="color:#c2410c;font-weight:700;text-decoration:underline;">$1</a>'
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, u) =>
+    `<a href="${u}" style="color:#c2410c;font-weight:700;text-decoration:underline;">${t}</a>`
   );
-  // リスト
-  s = s.replace(/^[-*] (.+)$/gm,
-    '<div style="padding-left:16px;margin:3px 0;color:#555;font-size:14px;line-height:1.7;"><span style="color:#c2410c;font-weight:700;margin-right:6px;">—</span>$1</div>'
-  );
-  s = s.replace(/^\d+\. (.+)$/gm,
-    '<div style="padding-left:16px;margin:3px 0;color:#555;font-size:14px;line-height:1.7;"><span style="color:#c2410c;font-weight:700;margin-right:6px;">—</span>$1</div>'
-  );
+
+  // 番号付きリスト / 箇条書き
+  const liStyle = 'padding-left:16px;margin:3px 0;color:#555;font-size:14px;line-height:1.7;';
+  const bullet  = `<span style="color:#c2410c;font-weight:700;margin-right:6px;">—</span>`;
+  s = s.replace(/^[-*] (.+)$/gm,   (_, t) => `<div style="${liStyle}">${bullet}${t}</div>`);
+  s = s.replace(/^\d+\. (.+)$/gm,  (_, t) => `<div style="${liStyle}">${bullet}${t}</div>`);
+
   // 段落
   const blocks = s.split(/\n{2,}/);
   s = blocks.map(b => {
     b = b.trim();
     if (!b) return '';
-    if (b.startsWith('<')) return b;
+    if (/^<(div|pre|table|ul|ol)/.test(b)) return b;
     return `<p style="margin:6px 0;font-size:14px;line-height:1.8;color:#555;">${b.replace(/\n/g, '<br>')}</p>`;
   }).join('');
+
   return s;
 }
 // ──────────────────────────────────────────────────────────────
