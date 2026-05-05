@@ -302,9 +302,10 @@ const suggestions = [
     let s = esc(raw);
     s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => `<pre><code>${c.trimEnd()}</code></pre>`);
     s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-    s = s.replace(/^### (.+)$/gm, '<h4>$1</h4>');
-    s = s.replace(/^## (.+)$/gm,  '<h3>$1</h3>');
-    s = s.replace(/^# (.+)$/gm,   '<h2>$1</h2>');
+    s = s.replace(/^#{4,} (.+)$/gm, '<h4>$1</h4>');
+    s = s.replace(/^### (.+)$/gm,   '<h4>$1</h4>');
+    s = s.replace(/^## (.+)$/gm,    '<h3>$1</h3>');
+    s = s.replace(/^# (.+)$/gm,     '<h2>$1</h2>');
     s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
     s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     s = s.replace(/\*(.+?)\*/g,    '<em>$1</em>');
