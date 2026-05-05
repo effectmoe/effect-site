@@ -35,19 +35,17 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       return new Response(JSON.stringify({ error: '記事コンテキストが必要です' }), { status: 400 });
     }
 
-    // 記事本文は4000字に抑えてモデルの混乱を防ぐ
     const excerpt = (articleContext.body ?? '').slice(0, 4000);
 
-    // ── シンプルで漏れにくいシステムプロンプト ──
     const systemPrompt =
-      `You are an AI concierge for the article titled "${articleContext.title}". ` +
-      `Answer questions about this article only. ` +
-      `If asked about anything unrelated, reply in Japanese: "${OUT_OF_SCOPE}" ` +
-      `Always answer in Japanese. Keep answers under 400 characters. ` +
-      `Use the following article content as your only knowledge source:\n\n${excerpt}`;
+      `あなたは記事「${articleContext.title}」の内容に詳しいAIアシスタントです。` +
+      `以下の記事テキストを参照して、ユーザーの質問に日本語で丁寧に答えてください。` +
+      `回答は記事の内容に基づき、簡潔に（400字以内）まとめてください。` +
+      `記事に書かれていない情報は「この記事には記載がありませんが、」と前置きして補足してください。\n\n` +
+      `【記事テキスト】\n${excerpt}`;
 
     const messages: { role: string; content: string }[] = [
-      ...history.slice(-4).map((m) => ({ role: m.role, content: m.content })),
+      ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
       { role: 'user', content: message },
     ];
 
