@@ -39,8 +39,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     const systemPrompt =
       `あなたは記事「${articleContext.title}」の内容に詳しいAIアシスタントです。` +
-      `以下の記事テキストを参照して、ユーザーの質問に日本語で丁寧に答えてください。` +
-      `回答は記事の内容に基づき、簡潔に（400字以内）まとめてください。` +
+      `以下の記事テキストを参照して、ユーザーの質問に日本語で答えてください。` +
+      `必ず1200トークン以内に収まるよう、回答を完結させてください。コードブロックを書く場合は必ず閉じてください。` +
       `記事に書かれていない情報は「この記事には記載がありませんが、」と前置きして補足してください。\n\n` +
       `【記事テキスト】\n${excerpt}`;
 
@@ -52,7 +52,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const aiResponse = await (env.AI.run as any)('@cf/meta/llama-3.1-8b-instruct', {
       messages: [{ role: 'system', content: systemPrompt }, ...messages],
       stream: true,
-      max_tokens: 800,
+      max_tokens: 1200,
     });
 
     return new Response(aiResponse as ReadableStream, {

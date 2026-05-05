@@ -229,8 +229,8 @@
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
   function parseMarkdown(raw: string): string {
+    if ((raw.match(/```/g) || []).length % 2 !== 0) raw += '\n```';
     let s = esc(raw);
-    // コードブロック
     s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => `<pre><code>${c.trimEnd()}</code></pre>`);
     // インラインコード
     s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');

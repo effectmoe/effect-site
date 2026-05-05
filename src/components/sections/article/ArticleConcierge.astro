@@ -225,6 +225,8 @@ const suggestions = [
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
   function parseMarkdown(raw) {
+    // 未閉鎖コードブロックを自動補完
+    if ((raw.match(/```/g) || []).length % 2 !== 0) raw += '\n```';
     let s = esc(raw);
     s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => `<pre><code>${c.trimEnd()}</code></pre>`);
     s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
