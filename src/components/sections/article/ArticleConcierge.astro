@@ -199,14 +199,26 @@ const suggestions = [
     padding: 0;
   }
 
-  /* リンク */
+  /* リンク — ボタン形式 */
   .concierge-msg[data-role="assistant"] .msg-bubble a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
     color: #c2410c;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    font-weight: 600;
+    border: 1px solid #c2410c;
+    padding: 0.15em 0.65em;
+    font-family: var(--font-roboto-mono), monospace;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
   }
-  .concierge-msg[data-role="assistant"] .msg-bubble a:hover { opacity: 0.75; }
+  .concierge-msg[data-role="assistant"] .msg-bubble a::after { content: ' →'; }
+  .concierge-msg[data-role="assistant"] .msg-bubble a:hover {
+    background: #c2410c;
+    color: #fff;
+  }
 
   .typing::after {
     content: '▋';
