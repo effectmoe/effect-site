@@ -227,29 +227,45 @@ const suggestions = [
   function parseMarkdown(raw) {
     // 未閉鎖コードブロックを自動補完
     if ((raw.match(/```/g) || []).length % 2 !== 0) raw += '\n```';
-    let s = esc(raw);
-    s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => `<pre><code>${c.trimEnd()}</code></pre>`);
-    s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-    // 連続するインラインコード行（2行以上）→ コードブロックに昇格
-    s = s.replace(/((?:<code>[^\n]*<\/code>\n){2,}<code>[^\n]*<\/code>)/g, (m) => {
-      const code = m.replace(/<code>|<\/code>/g, '').split('\n').join('\n');
-      return `<pre><code>${code}</code></pre>`;
-    });
-    s = s.replace(/^#{4,} (.+)$/gm, '<h4>$1</h4>');
-    s = s.replace(/^### (.+)$/gm,   '<h4>$1</h4>');
-    s = s.replace(/^## (.+)$/gm,    '<h3>$1</h3>');
-    s = s.replace(/^# (.+)$/gm,     '<h2>$1</h2>');
-    s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    s = s.replace(/\*(.+?)\*/g,    '<em>$1</em>');
-    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
 
+    // ① コードブロックをプレースホルダーに退避（行分割で壊れないように）
+    const preBlocks = [];
+    let s = raw.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, c) => {
+      preBlocks.push(esc(c.trimEnd()));
+      return `\x01PRE${preBlocks.length - 1}\x01`;
+    });
+
+    s = esc(s);
+
+    // ② インラインコード
+    s = s.replace(/`([^`\n]+)`/g, (_, c) => `<code>${c}</code>`);
+    // 連続するインラインコード行 → コードブロックに昇格
+    s = s.replace(/((?:<code>[^\n]*<\/code>\n){2,}<code>[^\n]*<\/code>)/g, (m) => {
+      const code = m.replace(/<code>|<\/code>/g, '');
+      preBlocks.push(code.trimEnd());
+      return `\x01PRE${preBlocks.length - 1}\x01`;
+    });
+
+    // ③ 見出し・インライン装飾・リンク
+    s = s.replace(/^#{4,} (.+)$/gm, (_, t) => `<h4>${t}</h4>`);
+    s = s.replace(/^### (.+)$/gm,   (_, t) => `<h4>${t}</h4>`);
+    s = s.replace(/^## (.+)$/gm,    (_, t) => `<h3>${t}</h3>`);
+    s = s.replace(/^# (.+)$/gm,     (_, t) => `<h2>${t}</h2>`);
+    s = s.replace(/\*\*\*(.+?)\*\*\*/g, (_, t) => `<strong><em>${t}</em></strong>`);
+    s = s.replace(/\*\*(.+?)\*\*/g, (_, t) => `<strong>${t}</strong>`);
+    s = s.replace(/\*(.+?)\*/g,     (_, t) => `<em>${t}</em>`);
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, u) => `<a href="${u}">${t}</a>`);
+
+    // ④ 行単位で構造化（プレースホルダーはブロック扱い）
     const lines = s.split('\n');
     const out = [];
     let i = 0;
     while (i < lines.length) {
       const line = lines[i].trimEnd();
-      if (/^<(h[234]|pre|ul|div)/.test(line)) { out.push(line); i++; continue; }
+      // プレースホルダー・ブロック要素はそのまま通過
+      if (/^\x01PRE\d+\x01$/.test(line) || /^<(h[234]|ul|div)/.test(line)) {
+        out.push(line); i++; continue;
+      }
       // 番号付きステップ
       const step = line.match(/^(\d+)\. (.+)$/);
       if (step) {
@@ -257,7 +273,7 @@ const suggestions = [
         i++;
         while (i < lines.length) {
           const nx = lines[i].trimEnd();
-          if (!nx.trim() || /^\d+\. /.test(nx) || /^[-*] /.test(nx) || /^<h/.test(nx)) break;
+          if (!nx.trim() || /^\x01PRE/.test(nx) || /^\d+\. /.test(nx) || /^[-*] /.test(nx) || /^<h/.test(nx)) break;
           subs.push(nx.trim());
           i++;
         }
@@ -283,12 +299,15 @@ const suggestions = [
       const para = [line]; i++;
       while (i < lines.length) {
         const nx = lines[i].trimEnd();
-        if (!nx.trim() || /^\d+\. |^[-*] |^<(h[234]|pre)/.test(nx)) break;
+        if (!nx.trim() || /^\x01PRE/.test(nx) || /^\d+\. |^[-*] |^<(h[234])/.test(nx)) break;
         para.push(nx); i++;
       }
       out.push(`<p>${para.join('<br>')}</p>`);
     }
-    return out.join('');
+    // ⑤ コードブロックを復元
+    return out.join('').replace(/\x01PRE(\d+)\x01/g, (_, idx) =>
+      `<pre><code>${preBlocks[+idx]}</code></pre>`
+    );
   }
   // ──────────────────────────────────────────────────────────
 
