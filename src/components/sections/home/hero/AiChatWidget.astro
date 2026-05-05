@@ -234,6 +234,11 @@
     s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => `<pre><code>${c.trimEnd()}</code></pre>`);
     // インラインコード
     s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    // 連続するインラインコード行（2行以上）→ コードブロックに昇格
+    s = s.replace(/((?:<code>[^\n]*<\/code>\n){2,}<code>[^\n]*<\/code>)/g, (m) => {
+      const code = m.replace(/<code>|<\/code>/g, '').split('\n').join('\n');
+      return `<pre><code>${code}</code></pre>`;
+    });
     // 見出し
     s = s.replace(/^#{4,} (.+)$/gm, '<h4>$1</h4>');
     s = s.replace(/^### (.+)$/gm,   '<h4>$1</h4>');
