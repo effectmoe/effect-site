@@ -7,7 +7,7 @@ interface Props {
 
 const { articleId, articleTitle, articleBody } = Astro.props;
 
-const truncatedBody = articleBody.slice(0, 3000);
+const truncatedBody = articleBody.slice(0, 12000);
 const suggestions = [
   'この記事の要点を教えて',
   'もう少し詳しく説明して',
