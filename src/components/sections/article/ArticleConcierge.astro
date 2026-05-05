@@ -365,7 +365,7 @@ const suggestions = [
       }
 
       if (bubble) {
-        bubble.classList.remove('typing');
+        bubble.classList.remove('concierge-typing');
         bubble.innerHTML = parseMarkdown(full);
       }
       history.push({ role: 'assistant', content: full });
