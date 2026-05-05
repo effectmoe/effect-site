@@ -13,7 +13,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context;
 
   try {
-    const { messages, email } = await request.json() as { messages: Message[]; email?: string };
+    const { messages, email, articleTitle } = await request.json() as {
+      messages: Message[];
+      email?: string;
+      articleTitle?: string;
+    };
 
     if (!messages?.length) {
       return new Response(JSON.stringify({ error: 'messages is empty' }), { status: 400 });
@@ -27,12 +31,22 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Gmail送信（GAS Webhook 経由）
     if (email && env.GAS_GMAIL_URL) {
+      const subject = articleTitle
+        ? `「${articleTitle}」の記事コンシェルジュ会話ログ`
+        : 'Effect AI との会話ログ';
+
+      const contextBadge = articleTitle
+        ? `<p style="font-size:11px;letter-spacing:.08em;color:#aaa;margin-bottom:4px;">記事：${articleTitle}</p>`
+        : '';
+
       const logText = messages.map((m) =>
         `${m.role === 'user' ? '【あなた】' : '【EFFECT AI】'}\n${m.content}`
       ).join('\n\n');
 
       const html = `<div style="font-family:monospace;font-size:15px;color:#333;max-width:600px;margin:0 auto;padding:36px;">
-  <p style="font-size:12px;letter-spacing:.1em;color:#999;text-transform:uppercase;margin-bottom:28px;">Effect AI — 会話ログ</p>
+  <p style="font-size:12px;letter-spacing:.1em;color:#999;text-transform:uppercase;margin-bottom:8px;">Effect AI — 会話ログ</p>
+  ${contextBadge}
+  <hr style="border:none;border-top:1px solid #eee;margin:20px 0 28px;">
   ${messages.map((m) => `
   <div style="margin-bottom:24px;${m.role === 'user' ? 'text-align:right;' : ''}">
     <span style="font-size:11px;letter-spacing:.1em;color:#bbb;text-transform:uppercase;display:block;margin-bottom:5px;">${m.role === 'user' ? 'YOU' : 'EFFECT AI'}</span>
@@ -48,7 +62,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
         body: JSON.stringify({
           action: 'send_gmail',
           to: email,
-          subject: 'Effect AI との会話ログ',
+          subject,
           body: logText,
           html_body: html,
           from_name: 'EFFECT AI',
