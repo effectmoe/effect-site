@@ -85,15 +85,63 @@ const suggestions = [
     display: flex;
     justify-content: flex-end;
   }
-  .concierge-msg[data-role="user"] p {
+  .concierge-msg[data-role="user"] .msg-bubble {
     color: rgba(0,0,0,0.82);
     text-align: right;
     background: rgba(0,0,0,0.05);
     padding: 0.5rem 0.75rem;
     max-width: 80%;
+    font-family: var(--font-roboto-mono), monospace;
+    font-size: 0.75rem;
+    line-height: 1.8;
   }
-  .concierge-msg[data-role="assistant"] p {
-    color: rgba(0,0,0,0.68);
+  .concierge-msg[data-role="assistant"] .msg-bubble {
+    color: rgba(0,0,0,0.75);
+    font-size: 0.8125rem;
+    line-height: 1.75;
+  }
+
+  /* Rich text inside assistant messages */
+  .concierge-msg[data-role="assistant"] .msg-bubble p { margin: 0.5em 0; }
+  .concierge-msg[data-role="assistant"] .msg-bubble p:first-child { margin-top: 0; }
+  .concierge-msg[data-role="assistant"] .msg-bubble p:last-child { margin-bottom: 0; }
+  .concierge-msg[data-role="assistant"] .msg-bubble strong { font-weight: 700; color: rgba(0,0,0,0.88); }
+  .concierge-msg[data-role="assistant"] .msg-bubble em { font-style: italic; }
+  .concierge-msg[data-role="assistant"] .msg-bubble h2,
+  .concierge-msg[data-role="assistant"] .msg-bubble h3,
+  .concierge-msg[data-role="assistant"] .msg-bubble h4 {
+    font-weight: 700;
+    margin: 0.75em 0 0.25em;
+    color: rgba(0,0,0,0.88);
+    line-height: 1.4;
+  }
+  .concierge-msg[data-role="assistant"] .msg-bubble h2 { font-size: 1em; }
+  .concierge-msg[data-role="assistant"] .msg-bubble h3 { font-size: 0.9375em; }
+  .concierge-msg[data-role="assistant"] .msg-bubble h4 { font-size: 0.875em; }
+  .concierge-msg[data-role="assistant"] .msg-bubble ul,
+  .concierge-msg[data-role="assistant"] .msg-bubble ol {
+    padding-left: 1.25em;
+    margin: 0.4em 0;
+  }
+  .concierge-msg[data-role="assistant"] .msg-bubble li { margin: 0.2em 0; }
+  .concierge-msg[data-role="assistant"] .msg-bubble code {
+    font-family: var(--font-roboto-mono), monospace;
+    font-size: 0.85em;
+    background: rgba(0,0,0,0.07);
+    padding: 0.1em 0.35em;
+    border-radius: 2px;
+  }
+  .concierge-msg[data-role="assistant"] .msg-bubble pre {
+    background: rgba(0,0,0,0.06);
+    padding: 0.75em 1em;
+    overflow-x: auto;
+    margin: 0.5em 0;
+    border-radius: 2px;
+  }
+  .concierge-msg[data-role="assistant"] .msg-bubble pre code {
+    background: none;
+    padding: 0;
+    font-size: 0.8125em;
   }
 
   .typing::after {
@@ -105,7 +153,6 @@ const suggestions = [
 </style>
 
 <script define:vars={{ articleId, articleTitle, truncatedBody }}>
-  const root        = document.getElementById('concierge-root');
   const messagesEl  = document.getElementById('concierge-messages');
   const inputEl     = document.getElementById('concierge-input');
   const sendBtn     = document.getElementById('concierge-send');
@@ -116,11 +163,41 @@ const suggestions = [
   const history = [];
   let chatStarted = false;
 
-  const articleContext = {
-    id: articleId,
-    title: articleTitle,
-    body: truncatedBody,
-  };
+  const articleContext = { id: articleId, title: articleTitle, body: truncatedBody };
+
+  // ── Markdown → HTML（XSSセーフ）────────────────────────────
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function parseMarkdown(raw) {
+    let s = esc(raw);
+    // コードブロック（インライン変換より先に処理）
+    s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_,c) => `<pre><code>${c.trimEnd()}</code></pre>`);
+    // インラインコード
+    s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    // 見出し
+    s = s.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+    s = s.replace(/^## (.+)$/gm,  '<h3>$1</h3>');
+    s = s.replace(/^# (.+)$/gm,   '<h2>$1</h2>');
+    // 太字・斜体
+    s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    s = s.replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>');
+    s = s.replace(/\*(.+?)\*/g,         '<em>$1</em>');
+    // 箇条書き（連続する li をまとめて ul/ol に包む）
+    s = s.replace(/^[-*] (.+)$/gm,    '<li>$1</li>');
+    s = s.replace(/^\d+\. (.+)$/gm,   '<li>$1</li>');
+    s = s.replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+    // 段落（ブロック要素を分離してから <p> で包む）
+    const blocks = s.split(/\n{2,}/);
+    s = blocks.map(b => {
+      b = b.trim();
+      if (!b) return '';
+      if (/^<(h[234]|ul|ol|pre|li)/.test(b)) return b;
+      return `<p>${b.replace(/\n/g, '<br>')}</p>`;
+    }).join('');
+    return s;
+  }
+  // ──────────────────────────────────────────────────────────
 
   function addMsg(role, text = '') {
     const div = document.createElement('div');
@@ -134,13 +211,13 @@ const suggestions = [
       div.appendChild(label);
     }
 
-    const p = document.createElement('p');
-    p.className = 'font-mono text-xs leading-relaxed';
-    p.textContent = text;
-    div.appendChild(p);
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    if (role === 'user') bubble.textContent = text;
+    div.appendChild(bubble);
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;
-    return p;
+    return bubble;
   }
 
   function setLoading(loading) {
@@ -163,20 +240,15 @@ const suggestions = [
     inputEl.value = '';
     setLoading(true);
 
-    const p = addMsg('assistant');
-    p.classList.add('typing');
+    const bubble = addMsg('assistant');
+    bubble.classList.add('typing');
 
     try {
       const res = await fetch('/api/article-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          history: history.slice(-6),
-          articleContext,
-        }),
+        body: JSON.stringify({ message: text, history: history.slice(-6), articleContext }),
       });
-
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
       const reader = res.body.getReader();
@@ -194,17 +266,21 @@ const suggestions = [
             const d = JSON.parse(raw);
             const token = d.response ?? d.choices?.[0]?.delta?.content ?? '';
             full += token;
-            p.textContent = full;
+            // ストリーム中はプレーンテキスト表示
+            bubble.textContent = full;
             messagesEl.scrollTop = messagesEl.scrollHeight;
           } catch {}
         }
       }
 
+      // 受信完了後にMarkdownとしてレンダリング
+      bubble.classList.remove('typing');
+      bubble.innerHTML = parseMarkdown(full);
       history.push({ role: 'assistant', content: full });
     } catch {
-      p.textContent = '接続エラーが発生しました。しばらくしてから再試行してください。';
+      bubble.classList.remove('typing');
+      bubble.textContent = '接続エラーが発生しました。しばらくしてから再試行してください。';
     } finally {
-      p.classList.remove('typing');
       setLoading(false);
       inputEl.focus();
     }
