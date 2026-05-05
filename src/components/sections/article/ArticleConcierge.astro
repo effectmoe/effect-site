@@ -1,0 +1,227 @@
+---
+interface Props {
+  articleId: string;
+  articleTitle: string;
+  articleBody: string;
+}
+
+const { articleId, articleTitle, articleBody } = Astro.props;
+
+const truncatedBody = articleBody.slice(0, 3000);
+const suggestions = [
+  'この記事の要点を教えて',
+  'もう少し詳しく説明して',
+  '実際にどう使えばいい？',
+];
+---
+
+<section class="container mx-auto px-4 pb-20 md:pb-28">
+  <div id="concierge-root" class="border border-foreground/20">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-foreground/20 bg-foreground px-5 py-4">
+      <div class="flex items-center gap-3">
+        <span class="font-mono text-[11px] tracking-[0.22em] text-background/70 uppercase">AI Concierge</span>
+        <span id="concierge-status" class="inline-block h-1.5 w-1.5 rounded-full bg-background/30"></span>
+      </div>
+      <span class="font-mono text-[10px] tracking-widest text-background/40 uppercase">この記事専用</span>
+    </div>
+
+    <!-- Body -->
+    <div class="bg-primary-foreground px-5 py-5">
+      <!-- Intro (hidden after first message) -->
+      <div id="concierge-intro" class="mb-4 space-y-1">
+        <p class="font-mono text-xs leading-relaxed text-foreground/60">
+          記事「<span class="text-foreground/85">{articleTitle}</span>」に関するご質問にお答えします。
+        </p>
+        <p class="font-mono text-[10px] tracking-widest text-foreground/35 uppercase">
+          記事以外のトピックには回答できません
+        </p>
+      </div>
+
+      <!-- Messages -->
+      <div
+        id="concierge-messages"
+        class="mb-4 max-h-64 space-y-4 overflow-y-auto pr-1"
+        style="scrollbar-width: none;"
+      ></div>
+
+      <!-- Suggestion chips -->
+      <div id="concierge-suggestions" class="mb-4 flex flex-wrap gap-2">
+        {suggestions.map((s) => (
+          <button
+            class="concierge-suggestion border border-foreground/20 bg-transparent px-3 py-1.5 font-mono text-[11px] tracking-wide text-foreground/50 transition-colors hover:border-foreground/50 hover:text-foreground/80"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      <!-- Input -->
+      <div class="flex items-center gap-3 border-b border-foreground/20 pb-2">
+        <input
+          id="concierge-input"
+          type="text"
+          placeholder="この記事について質問する..."
+          maxlength="300"
+          class="flex-1 bg-transparent font-mono text-xs text-foreground outline-none placeholder:text-foreground/25"
+        />
+        <button
+          id="concierge-send"
+          aria-label="送信"
+          class="font-mono text-xs text-foreground/30 transition-colors hover:text-foreground"
+        >→</button>
+      </div>
+
+      <!-- Sandbox note -->
+      <p class="mt-2 font-mono text-[10px] tracking-widest text-foreground/25 uppercase">
+        Powered by Cloudflare AI · Sandboxed to this article
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  #concierge-messages::-webkit-scrollbar { display: none; }
+
+  .concierge-msg[data-role="user"] {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .concierge-msg[data-role="user"] p {
+    color: rgba(0,0,0,0.82);
+    text-align: right;
+    background: rgba(0,0,0,0.05);
+    padding: 0.5rem 0.75rem;
+    max-width: 80%;
+  }
+  .concierge-msg[data-role="assistant"] p {
+    color: rgba(0,0,0,0.68);
+  }
+
+  .typing::after {
+    content: '▋';
+    animation: blink 0.8s step-end infinite;
+    opacity: 0.4;
+  }
+  @keyframes blink { 0%,100%{opacity:0.4} 50%{opacity:0} }
+</style>
+
+<script define:vars={{ articleId, articleTitle, truncatedBody }}>
+  const root        = document.getElementById('concierge-root');
+  const messagesEl  = document.getElementById('concierge-messages');
+  const inputEl     = document.getElementById('concierge-input');
+  const sendBtn     = document.getElementById('concierge-send');
+  const statusDot   = document.getElementById('concierge-status');
+  const introEl     = document.getElementById('concierge-intro');
+  const suggestEl   = document.getElementById('concierge-suggestions');
+
+  const history = [];
+  let chatStarted = false;
+
+  const articleContext = {
+    id: articleId,
+    title: articleTitle,
+    body: truncatedBody,
+  };
+
+  function addMsg(role, text = '') {
+    const div = document.createElement('div');
+    div.className = 'concierge-msg';
+    div.dataset.role = role;
+
+    if (role === 'user') {
+      const label = document.createElement('span');
+      label.className = 'mb-0.5 block font-mono text-[10px] tracking-widest text-foreground/25 uppercase text-right';
+      label.textContent = 'YOU';
+      div.appendChild(label);
+    }
+
+    const p = document.createElement('p');
+    p.className = 'font-mono text-xs leading-relaxed';
+    p.textContent = text;
+    div.appendChild(p);
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return p;
+  }
+
+  function setLoading(loading) {
+    statusDot.style.backgroundColor = loading ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)';
+    inputEl.disabled = loading;
+    sendBtn.toggleAttribute('disabled', loading);
+  }
+
+  async function send(text) {
+    if (!text.trim() || inputEl.disabled) return;
+
+    if (!chatStarted) {
+      chatStarted = true;
+      introEl.style.display = 'none';
+      suggestEl.style.display = 'none';
+    }
+
+    addMsg('user', text);
+    history.push({ role: 'user', content: text });
+    inputEl.value = '';
+    setLoading(true);
+
+    const p = addMsg('assistant');
+    p.classList.add('typing');
+
+    try {
+      const res = await fetch('/api/article-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history: history.slice(-6),
+          articleContext,
+        }),
+      });
+
+      if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let full = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of dec.decode(value, { stream: true }).split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (raw === '[DONE]') break;
+          try {
+            const d = JSON.parse(raw);
+            const token = d.response ?? d.choices?.[0]?.delta?.content ?? '';
+            full += token;
+            p.textContent = full;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          } catch {}
+        }
+      }
+
+      history.push({ role: 'assistant', content: full });
+    } catch {
+      p.textContent = '接続エラーが発生しました。しばらくしてから再試行してください。';
+    } finally {
+      p.classList.remove('typing');
+      setLoading(false);
+      inputEl.focus();
+    }
+  }
+
+  sendBtn.addEventListener('click', () => send(inputEl.value));
+
+  let isComposing = false;
+  inputEl.addEventListener('compositionstart', () => { isComposing = true; });
+  inputEl.addEventListener('compositionend', () => { isComposing = false; });
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !isComposing) { e.preventDefault(); send(inputEl.value); }
+  });
+
+  document.querySelectorAll('.concierge-suggestion').forEach((btn) => {
+    btn.addEventListener('click', () => send(btn.textContent.trim()));
+  });
+</script>

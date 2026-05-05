@@ -5,7 +5,7 @@ date: 2026-05-05
 category: LLMO・情報戦略
 tags: [urlwatch, LLM要約, 競合監視, 情報インフラ, LLMO, Claude, 自動化, 経営]
 draft: false
-heroImage: "../../assets/articles/2026-05-05-競合・官公庁の更新を見逃さない情報インフラ：経営者のための『urlwatch-×-llm-要約』運用.png"
+heroImage: "/assets/articles/2026-05-05-競合・官公庁の更新を見逃さない情報インフラ：経営者のための『urlwatch-×-llm-要約』運用.png"
 ---
 
 # 競合・官公庁の更新を見逃さない情報インフラ：経営者のための「urlwatch × LLM 要約」運用設計書

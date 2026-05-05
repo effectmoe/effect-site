@@ -5,7 +5,7 @@ date: 2026-05-01
 category: AI開発ツール
 tags: [commandc-pwa, Claude Code, claude_cli, FastAPI, PWA]
 draft: false
-heroImage: "../../assets/articles/2026-05-01-commandc-pwa-の-claude_cli-モード.png"
+heroImage: "/assets/articles/2026-05-01-commandc-pwa-の-claude_cli-モード.png"
 ---
 
 # commandc-pwa の claude_cli モードとは？仕組みと活用方法

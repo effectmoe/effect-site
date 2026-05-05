@@ -4,6 +4,7 @@ import { getCollection, render } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
 import ArticleSlugHeader from '@/components/sections/article/ArticleSlugHeader.astro';
 import BlogSlugContent from '@/components/sections/blog/BlogSlugContent.astro';
+import ArticleConcierge from '@/components/sections/article/ArticleConcierge.astro';
 import Button from '@/components/ui/Button.astro';
 import { Icon } from 'astro-icon/components';
 
@@ -20,6 +21,7 @@ export const getStaticPaths = (async () => {
 const { entry } = Astro.props;
 const { Content, headings } = await render(entry);
 const { title, description, date, category, tags, heroImage } = entry.data;
+const articleBody = entry.body ?? (description ?? '');
 ---
 
 <Layout title={title} description={description}>
@@ -32,4 +34,5 @@ const { title, description, date, category, tags, heroImage } = entry.data;
       <Content />
     </BlogSlugContent>
   </article>
+  <ArticleConcierge articleId={entry.id} articleTitle={title} articleBody={articleBody} />
 </Layout>
