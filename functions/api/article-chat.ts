@@ -48,7 +48,7 @@ ${excerpt}
 - 記事と無関係・記事が扱わないトピックへの質問には必ず「${OUT_OF_SCOPE}」とだけ返す
 - 日本語で回答する（500字以内を目安）
 - 実装方法・手順を聞かれたときは記事の該当セクションの内容を具体的に説明する
-- EFFECTへの相談・依頼は /contact へ誘導する`;
+- EFFECTへの相談・依頼は [お問い合わせはこちら](/contact) へ案内する`;
 
     const messages: { role: string; content: string }[] = [
       ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),

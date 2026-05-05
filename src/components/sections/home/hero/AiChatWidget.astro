@@ -77,32 +77,48 @@
 
   .ai-msg[data-role="user"] p { color: rgba(0,0,0,0.82); text-align: right; }
   .ai-msg[data-role="user"] { display: flex; justify-content: flex-end; }
-  .ai-msg[data-role="assistant"] p { color: rgba(0,0,0,0.68); font-size: 0.75rem; line-height: 1.8; }
-
-  /* リッチテキスト — assistant メッセージ内 */
-  .ai-msg[data-role="assistant"] p + p { margin-top: 0.5em; }
-  .ai-msg[data-role="assistant"] strong { font-weight: 700; color: rgba(0,0,0,0.85); }
+  /* ── AIメッセージ リッチテキスト ──────────────────────── */
+  .ai-msg[data-role="assistant"] p {
+    color: rgba(0,0,0,0.72); font-size: 0.75rem; line-height: 1.8; margin: 0.45em 0;
+  }
+  .ai-msg[data-role="assistant"] p:first-child { margin-top: 0; }
+  .ai-msg[data-role="assistant"] strong { font-weight: 700; color: #0a0a0a; }
   .ai-msg[data-role="assistant"] em     { font-style: italic; }
   .ai-msg[data-role="assistant"] h2,
   .ai-msg[data-role="assistant"] h3,
   .ai-msg[data-role="assistant"] h4 {
-    font-weight: 700; color: rgba(0,0,0,0.85);
-    margin: 0.6em 0 0.2em; line-height: 1.4; font-size: 0.8rem;
+    font-family: var(--font-roboto-mono), monospace;
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.14em;
+    text-transform: uppercase; color: #0a0a0a;
+    border-left: 2px solid #c2410c; padding-left: 0.5em;
+    margin: 0.9em 0 0.3em; line-height: 1.4;
   }
-  .ai-msg[data-role="assistant"] ul {
-    padding-left: 1.1em; margin: 0.3em 0; list-style: disc;
+  .ai-msg[data-role="assistant"] ul,
+  .ai-msg[data-role="assistant"] ol { list-style: none; padding-left: 0; margin: 0.4em 0; }
+  .ai-msg[data-role="assistant"] li {
+    position: relative; padding-left: 1em;
+    margin: 0.25em 0; font-size: 0.75rem; line-height: 1.8; color: rgba(0,0,0,0.72);
   }
-  .ai-msg[data-role="assistant"] li  { margin: 0.15em 0; font-size: 0.75rem; line-height: 1.8; color: rgba(0,0,0,0.68); }
+  .ai-msg[data-role="assistant"] li::before {
+    content: '—'; position: absolute; left: 0; color: #c2410c; font-weight: 700;
+  }
   .ai-msg[data-role="assistant"] code {
     font-family: var(--font-roboto-mono), monospace;
-    font-size: 0.8em; background: rgba(0,0,0,0.07);
-    padding: 0.1em 0.3em; border-radius: 2px;
+    font-size: 0.8em; color: #c2410c;
+    background: rgba(194,65,12,0.08); border: 1px solid rgba(194,65,12,0.2);
+    padding: 0.1em 0.35em;
   }
   .ai-msg[data-role="assistant"] pre {
-    background: rgba(0,0,0,0.05); padding: 0.6em 0.8em;
-    overflow-x: auto; margin: 0.4em 0; border-radius: 2px;
+    background: #0a0a0a; border-left: 2px solid #c2410c;
+    padding: 0.7em 0.9em; overflow-x: auto; margin: 0.5em 0;
   }
-  .ai-msg[data-role="assistant"] pre code { background: none; padding: 0; font-size: 0.75rem; }
+  .ai-msg[data-role="assistant"] pre code {
+    color: #e5e5e5; background: none; border: none; font-size: 0.72rem; padding: 0;
+  }
+  .ai-msg[data-role="assistant"] a {
+    color: #c2410c; text-decoration: underline;
+    text-underline-offset: 2px; font-weight: 600;
+  }
 
   .typing::after {
     content: '▋';
@@ -191,6 +207,8 @@
     s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
     s = s.replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>');
     s = s.replace(/\*(.+?)\*/g,         '<em>$1</em>');
+    // リンク [text](url)
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
     s = s.replace(/^[-*] (.+)$/gm,  '<li>$1</li>');
     s = s.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
     s = s.replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);

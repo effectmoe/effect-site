@@ -38,11 +38,7 @@ const suggestions = [
       </div>
 
       <!-- Messages -->
-      <div
-        id="concierge-messages"
-        class="mb-4 max-h-64 space-y-4 overflow-y-auto pr-1"
-        style="scrollbar-width: none;"
-      ></div>
+      <div id="concierge-messages" class="mb-4 space-y-5"></div>
 
       <!-- Suggestion chips -->
       <div id="concierge-suggestions" class="mb-4 flex flex-wrap gap-2">
@@ -105,68 +101,112 @@ const suggestions = [
 <style>
   #concierge-messages::-webkit-scrollbar { display: none; }
 
-  .concierge-msg[data-role="user"] {
-    display: flex;
-    justify-content: flex-end;
-  }
+  /* ── ユーザーメッセージ ─────────────────────────────────── */
+  .concierge-msg[data-role="user"] { display: flex; flex-direction: column; align-items: flex-end; }
   .concierge-msg[data-role="user"] .msg-bubble {
-    color: rgba(0,0,0,0.82);
-    text-align: right;
-    background: rgba(0,0,0,0.05);
-    padding: 0.5rem 0.75rem;
-    max-width: 80%;
+    background: #0a0a0a;
+    color: #fff;
+    padding: 0.6rem 1rem;
     font-family: var(--font-roboto-mono), monospace;
     font-size: 0.75rem;
-    line-height: 1.8;
-  }
-  .concierge-msg[data-role="assistant"] .msg-bubble {
-    color: rgba(0,0,0,0.75);
-    font-size: 0.8125rem;
-    line-height: 1.75;
+    line-height: 1.7;
+    max-width: 85%;
   }
 
-  /* Rich text inside assistant messages */
-  .concierge-msg[data-role="assistant"] .msg-bubble p { margin: 0.5em 0; }
+  /* ── AIメッセージ共通 ───────────────────────────────────── */
+  .concierge-msg[data-role="assistant"] .msg-bubble {
+    font-size: 0.8125rem;
+    line-height: 1.8;
+    color: rgba(0,0,0,0.78);
+  }
+
+  /* 段落 */
+  .concierge-msg[data-role="assistant"] .msg-bubble p {
+    margin: 0.55em 0;
+  }
   .concierge-msg[data-role="assistant"] .msg-bubble p:first-child { margin-top: 0; }
-  .concierge-msg[data-role="assistant"] .msg-bubble p:last-child { margin-bottom: 0; }
-  .concierge-msg[data-role="assistant"] .msg-bubble strong { font-weight: 700; color: rgba(0,0,0,0.88); }
-  .concierge-msg[data-role="assistant"] .msg-bubble em { font-style: italic; }
+  .concierge-msg[data-role="assistant"] .msg-bubble p:last-child  { margin-bottom: 0; }
+
+  /* 見出し — アクセントボーダー付き */
   .concierge-msg[data-role="assistant"] .msg-bubble h2,
   .concierge-msg[data-role="assistant"] .msg-bubble h3,
   .concierge-msg[data-role="assistant"] .msg-bubble h4 {
+    font-family: var(--font-roboto-mono), monospace;
+    font-size: 0.68rem;
     font-weight: 700;
-    margin: 0.75em 0 0.25em;
-    color: rgba(0,0,0,0.88);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #0a0a0a;
+    border-left: 3px solid #c2410c;
+    padding-left: 0.6em;
+    margin: 1em 0 0.35em;
     line-height: 1.4;
   }
-  .concierge-msg[data-role="assistant"] .msg-bubble h2 { font-size: 1em; }
-  .concierge-msg[data-role="assistant"] .msg-bubble h3 { font-size: 0.9375em; }
-  .concierge-msg[data-role="assistant"] .msg-bubble h4 { font-size: 0.875em; }
+
+  /* 太字・斜体 */
+  .concierge-msg[data-role="assistant"] .msg-bubble strong {
+    font-weight: 700;
+    color: #0a0a0a;
+  }
+  .concierge-msg[data-role="assistant"] .msg-bubble em { font-style: italic; }
+
+  /* リスト — カスタムダッシュ */
   .concierge-msg[data-role="assistant"] .msg-bubble ul,
   .concierge-msg[data-role="assistant"] .msg-bubble ol {
-    padding-left: 1.25em;
-    margin: 0.4em 0;
+    list-style: none;
+    padding-left: 0;
+    margin: 0.5em 0;
   }
-  .concierge-msg[data-role="assistant"] .msg-bubble li { margin: 0.2em 0; }
+  .concierge-msg[data-role="assistant"] .msg-bubble li {
+    position: relative;
+    padding-left: 1.1em;
+    margin: 0.3em 0;
+    color: rgba(0,0,0,0.75);
+    font-size: 0.8rem;
+    line-height: 1.75;
+  }
+  .concierge-msg[data-role="assistant"] .msg-bubble li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: #c2410c;
+    font-weight: 700;
+  }
+
+  /* インラインコード */
   .concierge-msg[data-role="assistant"] .msg-bubble code {
     font-family: var(--font-roboto-mono), monospace;
-    font-size: 0.85em;
-    background: rgba(0,0,0,0.07);
-    padding: 0.1em 0.35em;
-    border-radius: 2px;
+    font-size: 0.82em;
+    color: #c2410c;
+    background: rgba(194,65,12,0.08);
+    border: 1px solid rgba(194,65,12,0.2);
+    padding: 0.1em 0.4em;
   }
+
+  /* コードブロック — ダークテーマ */
   .concierge-msg[data-role="assistant"] .msg-bubble pre {
-    background: rgba(0,0,0,0.06);
-    padding: 0.75em 1em;
+    background: #0a0a0a;
+    border-left: 3px solid #c2410c;
+    padding: 0.85em 1.1em;
+    margin: 0.7em 0;
     overflow-x: auto;
-    margin: 0.5em 0;
-    border-radius: 2px;
   }
   .concierge-msg[data-role="assistant"] .msg-bubble pre code {
+    color: #e5e5e5;
     background: none;
+    border: none;
+    font-size: 0.78rem;
     padding: 0;
-    font-size: 0.8125em;
   }
+
+  /* リンク */
+  .concierge-msg[data-role="assistant"] .msg-bubble a {
+    color: #c2410c;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+  }
+  .concierge-msg[data-role="assistant"] .msg-bubble a:hover { opacity: 0.75; }
 
   .typing::after {
     content: '▋';
@@ -215,6 +255,8 @@ const suggestions = [
     s = s.replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>');
     s = s.replace(/\*(.+?)\*/g,         '<em>$1</em>');
     // 箇条書き（連続する li をまとめて ul/ol に包む）
+    // リンク [text](url)
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
     s = s.replace(/^[-*] (.+)$/gm,    '<li>$1</li>');
     s = s.replace(/^\d+\. (.+)$/gm,   '<li>$1</li>');
     s = s.replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
