@@ -5,3 +5,7 @@ dist/
 .env.local
 *.log
 .DS_Store
+
+# Obsidian 個人設定（src/content/ を Vault として開くための設定。
+# チームでは共有しない。各自カスタマイズ可能）
+src/content/.obsidian/
