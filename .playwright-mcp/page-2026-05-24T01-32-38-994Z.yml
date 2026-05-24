@@ -1,0 +1,18 @@
+- generic [ref=e2]:
+  - img [ref=e4]
+  - generic [ref=e8]:
+    - generic [ref=e10]: otona-off.cloudflareaccess.com
+    - generic [ref=e11]:
+      - generic [ref=e12]: Enter your code
+      - paragraph [ref=e13]: A code has been emailed to you. It expires in 10 minutes.
+    - generic [ref=e14]: Check your email — including spam — for the verification code.
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: Code
+          - textbox "Code" [active] [ref=e19]:
+            - /placeholder: "000000"
+        - button "Verify" [ref=e21] [cursor=pointer]
+      - paragraph [ref=e22]:
+        - text: Didn't get the code?
+        - button "Resend" [ref=e23] [cursor=pointer]

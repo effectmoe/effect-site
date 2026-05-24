@@ -1,0 +1,15 @@
+- generic [active] [ref=e1]:
+  - article
+  - generic [ref=e2]:
+    - img [ref=e4]
+    - generic [ref=e8]:
+      - link "otona-off.cloudflareaccess.com" [ref=e9] [cursor=pointer]:
+        - /url: ""
+        - generic [ref=e10]: otona-off.cloudflareaccess.com
+      - generic [ref=e12]: Log in to ai-study-suzuki - Cloudflare Workers
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]: Email
+          - textbox "Email" [ref=e18]:
+            - /placeholder: example@email.com
+        - button "Send login code" [ref=e20] [cursor=pointer]
