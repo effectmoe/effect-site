@@ -1,0 +1,65 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Brand" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - text: 鈴木さん専用プライベート講座
+    - generic [ref=e5]:
+      - generic [ref=e7]:
+        - link "Nav menu item" [ref=e8] [cursor=pointer]:
+          - /url: /blog
+          - text: 講座一覧
+        - link "Nav menu item (external)" [ref=e9] [cursor=pointer]:
+          - /url: https://www.street-academy.com/steachers/271053
+          - text: About
+        - button "ログアウト" [ref=e10] [cursor=pointer]: ↪ ログアウト
+        - link "Search" [ref=e12] [cursor=pointer]:
+          - /url: /search
+          - generic [ref=e13]: Search
+          - img [ref=e14]
+      - button "Dark Theme" [ref=e19] [cursor=pointer]:
+        - generic [ref=e20]: Dark Theme
+        - img [ref=e21]
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - img "AIスタディ" [ref=e28]
+      - generic [ref=e29]:
+        - heading "鈴木さん専用プライベート講座" [level=1] [ref=e30]
+        - paragraph [ref=e31]: 鈴木さんのためのプライベートAI学習アーカイブ — 個別カリキュラム・動画記録・実習ノート
+    - generic [ref=e33]:
+      - heading "最新の講座" [level=2] [ref=e35]
+      - generic [ref=e36]:
+        - list [ref=e37]:
+          - listitem [ref=e38]:
+            - link "2026年5月21日 Claude CLIとDockerで会計システム開発環境を構築 claude cli docker postgresql 会計システム開発 実践学習" [ref=e39] [cursor=pointer]:
+              - /url: /blog/002-session02
+              - generic [ref=e40]:
+                - generic [ref=e41]:
+                  - generic [ref=e42]: 2026年5月21日
+                  - generic [ref=e43]: Claude CLIとDockerで会計システム開発環境を構築
+                - generic [ref=e44]:
+                  - generic [ref=e45]: claude cli
+                  - generic [ref=e46]: docker
+                  - generic [ref=e47]: postgresql
+                  - generic [ref=e48]: 会計システム開発
+                  - generic [ref=e49]: 実践学習
+              - img [ref=e50]
+          - listitem [ref=e52]:
+            - link "2026年5月20日 第1回 Next.js×Claude Codeで会計システム開発環境を構築 next.js claude code 会計システム vercel 開発環境構築" [ref=e53] [cursor=pointer]:
+              - /url: /blog/001-claude-code-accounting-system
+              - generic [ref=e54]:
+                - generic [ref=e55]:
+                  - generic [ref=e56]: 2026年5月20日
+                  - generic [ref=e57]: 第1回 Next.js×Claude Codeで会計システム開発環境を構築
+                - generic [ref=e58]:
+                  - generic [ref=e59]: next.js
+                  - generic [ref=e60]: claude code
+                  - generic [ref=e61]: 会計システム
+                  - generic [ref=e62]: vercel
+                  - generic [ref=e63]: 開発環境構築
+              - img [ref=e64]
+        - link "すべての講座を見る" [ref=e66] [cursor=pointer]:
+          - /url: /blog
+          - paragraph [ref=e67]: すべての講座を見る
+          - img [ref=e68]
+  - contentinfo [ref=e70]:
+    - generic [ref=e74]: © 2026 EFFECT Inc.
