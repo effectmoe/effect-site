@@ -1,11 +1,3 @@
----
-title: コンテンツのファイル名規則 — effect.moe
-description: src/content/配下のMD/MDXファイルの命名規則と、Hermes Agentおよび人間が従うべきslug生成のルールを定義したドキュメントです。
-tags: [naming convention, file naming, slug, web agent, automation, markdown, astro, content management, effect.moe, documentation]
-date: 
-category: guide
----
-
 # コンテンツのファイル名規則 — effect.moe
 
 このドキュメントは `src/content/` 配下の MD/MDX ファイルの命名規則を定める。

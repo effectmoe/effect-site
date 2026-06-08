@@ -1,11 +1,3 @@
----
-title: Acacia Studio - Creative Digital Design Studio
-description: AstroとTailwind CSSで構築された、滑らかなアニメーションとコンテンツ駆動型アーキテクチャを備えたプレミアムデジタルデザインスタジオのウェブサイト。
-tags: [Astro, Tailwind CSS, GSAP, Vercel, Design System, MDX, Resend, pnpm, SEO, Responsive Design]
-date: 
-category: guide
----
-
 # 🌿 Acacia Studio
 
 **Creative Digital Design Studio** — A premium agency website built with [Astro](https://astro.build), featuring smooth animations, content-driven architecture, and a refined visual identity.
