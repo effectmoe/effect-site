@@ -1,12 +1,3 @@
----
-title: effect-site (effect.moe)
-description: OpenClawを中核エージェントとしたLLMO/DX特化メディアサイトの技術スタック、デプロイ手順、アーキテクチャ、および運用ルールを定義したドキュメントです。
-tags: [effect-site, OpenClaw, Cloudflare Workers, React Router, TypeScript, Notion API, D1, Workers AI, LLMO, manga-pipeline]
-date: 
-category: report
-domain: effect.moe
----
-
 # effect-site (effect.moe)
 
 LLMO/DXに特化したメディアサイト。OpenClawを中核エージェントとしたプロジェクト。
