@@ -32,7 +32,7 @@ SITE_URL = "https://effect-site.effectmoe.workers.dev"
 REPO = "effectmoe/effect-site"
 PROJECT_DIR = Path(__file__).parent.parent
 PATROL_DATA_DIR = Path(__file__).parent / "patrol-data"
-TELEGRAM_BOT_TOKEN = "8226533383:AAGA0Tzo-tiEC_7j_MTnlaO2vNk0iq3xGg8"
+TELEGRAM_BOT_TOKEN = ""
 TELEGRAM_CHAT_ID = "8588084195"
 
 logging.basicConfig(
